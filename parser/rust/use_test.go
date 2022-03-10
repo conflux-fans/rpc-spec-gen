@@ -11,7 +11,7 @@ import (
 )
 
 func TestParseUse(t *testing.T) {
-	uses := []RustUse{
+	uses := []Use{
 		`crate::rpc::types::eth::{BlockNumber, LocalizedTrace, TraceFilter}`,
 		`cfx_types::H256`,
 		`jsonrpc_core::Result as JsonRpcResult`,

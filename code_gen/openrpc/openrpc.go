@@ -54,18 +54,18 @@ type Doc struct {
 	Components Components
 }
 
-func GenSchema(rustStruct parser.RustStructParsed) Schema {
+func GenSchema(structParsed parser.RustStructParsed) Schema {
 	panic("not implemented")
 }
 
-func GenMethod(rustFunc parser.RustFuncParsed) Method {
+func GenMethod(funcParsed parser.RustFuncParsed) Method {
 	panic("not implemented")
 }
 
-func GenMethods(rustTrait parser.RustTraitParsed) []Method {
+func GenMethods(traitParsed parser.RustTraitParsed) []Method {
 	panic("not implemented")
 }
 
-func GenDoc(rustTraits []parser.RustTraitParsed) []Doc {
+func GenDoc(fileParsed []parser.RustTraitsFileParsed) []Doc {
 	panic("not implemented")
 }

@@ -6,23 +6,23 @@ import (
 	"strings"
 )
 
-type RustFunc string
+type Func string
 
-type RustFuncParsed struct {
+type FuncParsed struct {
 	Comment    string
 	RpcMethod  string
 	FuncName   string
-	Params     []RustParamParsed
-	ReturnType RustTypeParsed
+	Params     []ParamParsed
+	ReturnType TypeParsed
 }
 
-type RustParamParsed struct {
+type ParamParsed struct {
 	Name string
-	Type RustTypeParsed
+	Type TypeParsed
 }
 
-func (r RustFunc) Parse() RustFuncParsed {
-	rfp := RustFuncParsed{}
+func (r Func) Parse() FuncParsed {
+	rfp := FuncParsed{}
 
 	funcReg := regexp.MustCompile(`(?ims)(.*)?#\[rpc.*?"(.*)?"\)\].*?fn(.*)?\(\s*\&self,*(.*)?\)\s*->\s*.*?<(.*)>`)
 	funcFinded := funcReg.FindStringSubmatch(string(r))
@@ -45,7 +45,7 @@ func (r RustFunc) Parse() RustFuncParsed {
 		name, type_ := paramFinded[1], paramFinded[2]
 		fmt.Printf("name %v\ntype %v\n", name, type_)
 
-		rfp.Params = append(rfp.Params, RustParamParsed{
+		rfp.Params = append(rfp.Params, ParamParsed{
 			Name: name,
 			Type: RustType(type_).Parse(),
 		})

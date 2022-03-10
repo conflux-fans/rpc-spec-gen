@@ -8,7 +8,7 @@ import (
 )
 
 func TestParseFunc(t *testing.T) {
-	var rustFunc RustFunc = `/// Returns the number of uncles in a block with given block number.
+	var rustFunc Func = `/// Returns the number of uncles in a block with given block number.
      #[rpc(name = "eth_getUncleCountByBlockNumber")]
      fn block_uncles_count_by_number(
          &self, blockNum: BlockNumber,

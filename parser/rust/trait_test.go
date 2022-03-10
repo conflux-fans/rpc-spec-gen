@@ -85,7 +85,7 @@ pub trait Eth {
 }
 
 func TestParseRustTrait(t *testing.T) {
-	var rt RustTrait = `/// Eth rpc interface.
+	var rt Trait = `/// Eth rpc interface.
 #[rpc(server)]
 pub trait Eth {
 	#[rpc(name = "web3_clientVersion")]

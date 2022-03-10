@@ -5,16 +5,16 @@ import (
 	"regexp"
 )
 
-type RustTrait string
+type Trait string
 
-type RustTraitParsed struct {
+type TraitParsed struct {
 	Comment string
 	Name    string
-	Funcs   []RustFuncParsed
+	Funcs   []FuncParsed
 }
 
-func (rt RustTrait) Parse() RustTraitParsed {
-	result := RustTraitParsed{}
+func (rt Trait) Parse() TraitParsed {
+	result := TraitParsed{}
 	var traitReg = regexp.MustCompile(`(?mUs)(?:\/\/\/(.*\n)|)#\[rpc\(.*\)\]\npub trait (.*) \{(.*)}`)
 	finds := traitReg.FindStringSubmatch(string(rt))
 
@@ -27,10 +27,10 @@ func (rt RustTrait) Parse() RustTraitParsed {
 
 	var funcReg = regexp.MustCompile(`(?mUs)(?:\/\/\/.*\n|)\s*#\[rpc\(name =.*\)\].*;`)
 	funcFinded := funcReg.FindAllString(funcs, -1)
-	result.Funcs = make([]RustFuncParsed, len(funcFinded))
+	result.Funcs = make([]FuncParsed, len(funcFinded))
 	for i, func_ := range funcFinded {
 		fmt.Printf("func_ %v %v\n", i, func_)
-		result.Funcs[i] = RustFunc(func_).Parse()
+		result.Funcs[i] = Func(func_).Parse()
 	}
 	return result
 }

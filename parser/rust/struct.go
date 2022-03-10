@@ -6,33 +6,33 @@ import (
 	"strings"
 )
 
-type RustStruct string
+type Struct string
 
 type RustType string
 
-// RustStructParsed reperesnts parse result of a Rust struct
-type RustStructParsed struct {
+// StructParsed reperesnts parse result of a Rust struct
+type StructParsed struct {
 	Comment string
 	Name    string
-	Fields  []RustFieldParsed
+	Fields  []FieldParsed
 }
 
-// RustFieldParsed reperesnts parse result of a Rust struct field
-type RustFieldParsed struct {
+// FieldParsed reperesnts parse result of a Rust struct field
+type FieldParsed struct {
 	Comment string
 	Name    string
-	Type    RustTypeParsed
+	Type    TypeParsed
 }
 
-// RustTypeParsed reperesnts parse result of a Rust struct field type
-type RustTypeParsed struct {
+// TypeParsed reperesnts parse result of a Rust struct field type
+type TypeParsed struct {
 	IsOption bool
 	IsArray  bool
 	Name     string
-	Core     *RustTypeParsed
+	Core     *TypeParsed
 }
 
-func (r RustStruct) Parse() RustStructParsed {
+func (r Struct) Parse() StructParsed {
 	structReg := regexp.MustCompile(`(?Us)(.*)pub struct (.*)\{(.*)\}`)
 	structFinded := structReg.FindStringSubmatch(string(r))
 	// fmt.Printf("%#v\n", structFinded)
@@ -45,17 +45,17 @@ func (r RustStruct) Parse() RustStructParsed {
 	fieldsFinded := fieldReg.FindAllStringSubmatch(sBody, -1)
 	// fmt.Printf("fieldsFinded %#v\n", fieldsFinded[0])
 
-	fields := make([]RustFieldParsed, len(fieldsFinded))
+	fields := make([]FieldParsed, len(fieldsFinded))
 	for i, field := range fieldsFinded {
 		fmt.Printf("field %#v\n", field)
 		fComment, fName, fType := strings.TrimSpace(field[1]), strings.TrimSpace(field[2]), RustType(field[3])
-		fields[i] = RustFieldParsed{fComment, fName, fType.Parse()}
+		fields[i] = FieldParsed{fComment, fName, fType.Parse()}
 	}
 
-	return RustStructParsed{sComment, sName, fields}
+	return StructParsed{sComment, sName, fields}
 }
 
-func (r RustType) Parse() (result RustTypeParsed) {
+func (r RustType) Parse() (result TypeParsed) {
 
 	optionReg := regexp.MustCompile(`Option<(.*)>`)
 	optionMatched := optionReg.FindStringSubmatch(string(r))

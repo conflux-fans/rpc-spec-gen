@@ -7,7 +7,7 @@ import (
 )
 
 func TestParseStruct(t *testing.T) {
-	var rustStruct RustStruct = `
+	var rustStruct Struct = `
 	/// Block representation
 	// #[derive(Debug, Serialize)]
 	// #[serde(rename_all = "camelCase")]

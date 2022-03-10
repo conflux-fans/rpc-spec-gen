@@ -8,13 +8,13 @@ import (
 type RustTraitsFile string
 
 type rustTraitsFileParsedMiddle struct {
-	traits []RustTrait
-	uses   []RustUse
+	traits []Trait
+	uses   []Use
 }
 
 type RustTraitsFileParsed struct {
-	Traits []RustTraitParsed
-	Uses   []RustUseParsed
+	Traits []TraitParsed
+	Uses   []UseParsed
 }
 
 func (rf RustTraitsFile) Parse() RustTraitsFileParsed {
@@ -24,18 +24,18 @@ func (rf RustTraitsFile) Parse() RustTraitsFileParsed {
 	traitsFinded := traitsReg.FindAllString(string(rf), -1)
 	fmt.Printf("traitRegFinded len %v, %v\n", len(traitsFinded), traitsFinded)
 
-	resultM.traits = make([]RustTrait, len(traitsFinded))
+	resultM.traits = make([]Trait, len(traitsFinded))
 	for i, trait := range traitsFinded {
-		resultM.traits[i] = RustTrait(trait)
+		resultM.traits[i] = Trait(trait)
 	}
 
 	useReg := regexp.MustCompile(`(?mUs)use (.*);`)
 	useFinded := useReg.FindAllString(string(rf), -1)
 	fmt.Printf("useFinded %v\n", useFinded)
 
-	resultM.uses = make([]RustUse, len(useFinded))
+	resultM.uses = make([]Use, len(useFinded))
 	for i, use := range useFinded {
-		resultM.uses[i] = RustUse(use)
+		resultM.uses[i] = Use(use)
 	}
 
 	return resultM.parseCore()
@@ -43,11 +43,11 @@ func (rf RustTraitsFile) Parse() RustTraitsFileParsed {
 
 func (rm rustTraitsFileParsedMiddle) parseCore() RustTraitsFileParsed {
 	result := RustTraitsFileParsed{}
-	result.Traits = make([]RustTraitParsed, len(rm.traits))
+	result.Traits = make([]TraitParsed, len(rm.traits))
 	for i, trait := range rm.traits {
 		result.Traits[i] = trait.Parse()
 	}
-	result.Uses = make([]RustUseParsed, len(rm.uses))
+	result.Uses = make([]UseParsed, len(rm.uses))
 	for i, use := range rm.uses {
 		result.Uses[i] = use.Parse()
 	}

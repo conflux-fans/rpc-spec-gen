@@ -9,19 +9,19 @@ import (
 	"github.com/dlclark/regexp2"
 )
 
-type RustUse string
+type Use string
 
-type RustUseParsed struct {
-	Types []RustUseType
+type UseParsed struct {
+	Types []UseType
 }
 
-type RustUseType struct {
+type UseType struct {
 	ModPath []string
 	Alias   string
 	Name    string
 }
 
-type rustUseItem string
+type useItem string
 
 type useNode struct {
 	name   string
@@ -101,7 +101,7 @@ func parseUseToNodes(str string) []useNode {
 	return nodes
 }
 
-func (r *RustUse) Parse() RustUseParsed {
+func (r *Use) Parse() UseParsed {
 	nodes := parseUseToNodes(string(*r))
 	fmt.Printf("nodes %#v\n", nodes)
 
@@ -110,11 +110,11 @@ func (r *RustUse) Parse() RustUseParsed {
 		flattens = append(flattens, node.flatten()...)
 	}
 
-	rts := []RustUseType{}
+	rts := []UseType{}
 	for i := range flattens {
-		rts = append(rts, rustUseItem(flattens[i]).Parse())
+		rts = append(rts, useItem(flattens[i]).Parse())
 	}
-	return RustUseParsed{
+	return UseParsed{
 		rts,
 	}
 }
@@ -182,14 +182,14 @@ func (u useNode) flatten() []string {
 // 	return result
 // }
 
-func (ri rustUseItem) Parse() RustUseType {
+func (ri useItem) Parse() UseType {
 	parts := strings.Split(string(ri), "::")
 	last := parts[len(parts)-1]
 
 	//jsonrpc_core::Result as JsonRpcResult
 	finds := re_ALIAS.FindStringSubmatch(last)
 	if len(finds) > 0 {
-		return RustUseType{
+		return UseType{
 			ModPath: parts[0 : len(parts)-1],
 			Name:    strings.TrimSpace(finds[1]),
 			Alias:   strings.TrimSpace(finds[2]),
@@ -199,7 +199,7 @@ func (ri rustUseItem) Parse() RustUseType {
 	// matched, _ := regexp.MatchString(`^\w+$`, last)
 	// if matched {
 	// }
-	return RustUseType{
+	return UseType{
 		ModPath: parts[0 : len(parts)-1],
 		Name:    strings.TrimSpace(last),
 		Alias:   strings.TrimSpace(last),
