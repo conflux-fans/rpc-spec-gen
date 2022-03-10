@@ -1,3 +1,5 @@
-module github.com/Conflux-Chain/rpc-check
+module github.com/Conflux-Chain/rpc-gen
 
 go 1.16
+
+require github.com/dlclark/regexp2 v1.4.0

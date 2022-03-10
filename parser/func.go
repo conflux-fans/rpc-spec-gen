@@ -8,7 +8,7 @@ import (
 
 type RustFunc string
 
-type RustFuncParse struct {
+type RustFuncParsed struct {
 	Comment    string
 	RpcMethod  string
 	FuncName   string
@@ -21,8 +21,8 @@ type RustParamParsed struct {
 	Type RustTypeParsed
 }
 
-func (r RustFunc) Parse() RustFuncParse {
-	rfp := RustFuncParse{}
+func (r RustFunc) Parse() RustFuncParsed {
+	rfp := RustFuncParsed{}
 
 	funcReg := regexp.MustCompile(`(?ims)(.*)?#\[rpc.*?"(.*)?"\)\].*?fn(.*)?\(\s*\&self,*(.*)?\)\s*->\s*.*?<(.*)>`)
 	funcFinded := funcReg.FindStringSubmatch(string(r))

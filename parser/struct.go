@@ -64,8 +64,7 @@ func (r RustType) Parse() (result RustTypeParsed) {
 	if len(optionMatched) > 0 {
 		result.IsOption = true
 		result.Name = optionMatched[1]
-		rawCore := RustType(result.Name)
-		coreParsed := rawCore.Parse()
+		coreParsed := RustType(result.Name).Parse()
 		result.Core = &coreParsed
 		return result
 	}
@@ -76,8 +75,7 @@ func (r RustType) Parse() (result RustTypeParsed) {
 	if len(vecMatched) > 0 {
 		result.IsArray = true
 		result.Name = vecMatched[1]
-		rawCore := RustType(result.Name)
-		coreParsed := rawCore.Parse()
+		coreParsed := RustType(result.Name).Parse()
 		result.Core = &coreParsed
 		return result
 	}

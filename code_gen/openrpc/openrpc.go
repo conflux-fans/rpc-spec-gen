@@ -1,71 +1,71 @@
 package openrpc
 
-import "github.com/Conflux-Chain/rpc-check/parser"
+import "github.com/Conflux-Chain/rpc-gen/parser"
 
-type OpenRpcSchema struct {
+type Schema struct {
 	REF        *string
 	Title      *string
 	Pattern    *string
 	Type       *string
-	Properties map[string]OpenRpcSchema
-	Items      *OpenRpcSchema
+	Properties map[string]Schema
+	Items      *Schema
 }
 
-type OpenRpcParam struct {
+type Param struct {
 	Name     string
 	Required bool
 	// maybe OpenRpcSchema{REF} or OpenRpcSchema{others}
-	Schema OpenRpcSchema
+	Schema Schema
 }
 
-type OpenRpcResult struct {
+type Result struct {
 	Name string
 	// maybe OpenRpcSchema{REF} or OpenRpcSchema{others}
-	Schema OpenRpcSchema
+	Schema Schema
 }
 
-type OpenRpcInfo struct {
+type Info struct {
 	Title       string
 	Description string
 	Version     string
-	License     OpenRpcLicense
+	License     License
 }
 
-type OpenRpcLicense struct {
+type License struct {
 	Name string
 	URL  string
 }
 
-type OpenRpcMethod struct {
+type Method struct {
 	Name    string
 	Summary string
-	Params  []OpenRpcParam
-	Result  OpenRpcResult
+	Params  []Param
+	Result  Result
 }
 
-type OpenRpcComponents struct {
-	Schemas map[string]OpenRpcSchema
+type Components struct {
+	Schemas map[string]Schema
 }
 
-type OpenRpcDoc struct {
+type Doc struct {
 	OpenRpc    string
-	Info       OpenRpcInfo
-	Methods    []OpenRpcMethod
-	Components OpenRpcComponents
+	Info       Info
+	Methods    []Method
+	Components Components
 }
 
-func GenSchema(rustStruct parser.RustStruct) OpenRpcSchema {
+func GenSchema(rustStruct parser.RustStructParsed) Schema {
 	panic("not implemented")
 }
 
-func GenMethod(rustFunc parser.RustFunc) OpenRpcMethod {
+func GenMethod(rustFunc parser.RustFuncParsed) Method {
 	panic("not implemented")
 }
 
-func GenMethods(rustTrait parser.RsutTrait) []OpenRpcMethod {
+func GenMethods(rustTrait parser.RustTraitParsed) []Method {
 	panic("not implemented")
 }
 
-func GenDoc(rustTrait parser.RsutTrait) []OpenRpcDoc {
+func GenDoc(rustTraits []parser.RustTraitParsed) []Doc {
 	panic("not implemented")
 }
