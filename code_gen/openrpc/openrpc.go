@@ -1,14 +1,22 @@
 package openrpc
 
-import "github.com/Conflux-Chain/rpc-gen/parser"
+import "github.com/Conflux-Chain/rpc-gen/parser/rust"
 
+type Doc struct {
+	OpenRpc    string
+	Info       Info
+	Methods    []Method
+	Components Components
+}
 type Schema struct {
-	REF        *string
-	Title      *string
-	Pattern    *string
-	Type       *string
-	Properties map[string]Schema
-	Items      *Schema
+	REF        *string           `json:"$ref,omitempty"`
+	Title      *string           `json:"title,omitempty"`
+	Pattern    *string           `json:"pattern,omitempty"`
+	Type       *string           `json:"type,omitempty"`
+	Required   []string          `json:"required,omitempty"`
+	Properties map[string]Schema `json:"properties,omitempty"`
+	Items      *Schema           `json:"items,omitempty"`
+	OneOf      []Schema          `json:"oneOf,omitempty"`
 }
 
 type Param struct {
@@ -47,25 +55,18 @@ type Components struct {
 	Schemas map[string]Schema
 }
 
-type Doc struct {
-	OpenRpc    string
-	Info       Info
-	Methods    []Method
-	Components Components
-}
-
-func GenSchema(structParsed parser.RustStructParsed) Schema {
+func GenSchema(structParsed rust.StructParsed) Schema {
 	panic("not implemented")
 }
 
-func GenMethod(funcParsed parser.RustFuncParsed) Method {
+func GenMethod(funcParsed rust.FuncParsed) Method {
 	panic("not implemented")
 }
 
-func GenMethods(traitParsed parser.RustTraitParsed) []Method {
+func GenMethods(traitParsed rust.TraitParsed) []Method {
 	panic("not implemented")
 }
 
-func GenDoc(fileParsed []parser.RustTraitsFileParsed) []Doc {
+func GenDoc(fileParsed []rust.TraitsFileParsed) []Doc {
 	panic("not implemented")
 }

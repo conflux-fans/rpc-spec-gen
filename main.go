@@ -4,7 +4,7 @@ import (
 	"io/ioutil"
 
 	"github.com/Conflux-Chain/rpc-gen/code_gen/openrpc"
-	"github.com/Conflux-Chain/rpc-gen/parser"
+	"github.com/Conflux-Chain/rpc-gen/parser/rust"
 )
 
 // V rpc 方法解析 参数 和 返回值
@@ -13,10 +13,10 @@ import (
 // X 生成 open rpc 方法描述文件
 func main() {
 	traitsFiles := []string{""}
-	parseds := []parser.RustTraitsFileParsed{}
+	parseds := []rust.TraitsFileParsed{}
 	for _, traitsFile := range traitsFiles {
 		traits, _ := ioutil.ReadFile(traitsFile)
-		parseds = append(parseds, parser.RustTraitsFile(traits).Parse())
+		parseds = append(parseds, rust.TraitsFile(traits).Parse())
 	}
 
 	openrpc.GenDoc(parseds)

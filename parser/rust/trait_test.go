@@ -1,4 +1,4 @@
-package parser
+package rust
 
 import (
 	"encoding/json"
@@ -51,7 +51,7 @@ import (
 // }
 
 func TestParseRusttraitsfile(t *testing.T) {
-	var file RustTraitsFile = `
+	var file TraitsFile = `
 //! Eth rpc interface.
 use cfx_types::{H160, H256, U256, U64};
 use jsonrpc_core::Result;

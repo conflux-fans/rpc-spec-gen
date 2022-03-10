@@ -1,4 +1,4 @@
-package parser
+package rust
 
 import (
 	"encoding/json"

@@ -1,23 +1,23 @@
-package parser
+package rust
 
 import (
 	"fmt"
 	"regexp"
 )
 
-type RustTraitsFile string
+type TraitsFile string
 
 type rustTraitsFileParsedMiddle struct {
 	traits []Trait
 	uses   []Use
 }
 
-type RustTraitsFileParsed struct {
+type TraitsFileParsed struct {
 	Traits []TraitParsed
 	Uses   []UseParsed
 }
 
-func (rf RustTraitsFile) Parse() RustTraitsFileParsed {
+func (rf TraitsFile) Parse() TraitsFileParsed {
 	resultM := rustTraitsFileParsedMiddle{}
 
 	traitsReg := regexp.MustCompile(`(?mUs)(\/\/\/.*\n|)#\[rpc\(.*\)\]\npub trait .* \{[\s\S]*}`)
@@ -41,8 +41,8 @@ func (rf RustTraitsFile) Parse() RustTraitsFileParsed {
 	return resultM.parseCore()
 }
 
-func (rm rustTraitsFileParsedMiddle) parseCore() RustTraitsFileParsed {
-	result := RustTraitsFileParsed{}
+func (rm rustTraitsFileParsedMiddle) parseCore() TraitsFileParsed {
+	result := TraitsFileParsed{}
 	result.Traits = make([]TraitParsed, len(rm.traits))
 	for i, trait := range rm.traits {
 		result.Traits[i] = trait.Parse()
