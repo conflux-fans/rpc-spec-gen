@@ -11,18 +11,14 @@ import (
 
 type Use string
 
-type UseParsed struct {
-	Types []UseType
-}
-
 type UseType struct {
 	ModPath []string
 	Alias   string
 	Name    string
 }
 
+type useBody string
 type useItem string
-
 type useNode struct {
 	name   string
 	childs []useNode
@@ -33,9 +29,53 @@ var (
 	re_ALIAS = regexp.MustCompile(`(.*) as (.*)`)
 )
 
-func parseUseToNodes(str string) []useNode {
+func MustNewUseType(usetype string) UseType {
+	u := useItem(usetype)
+	return u.Parse()
+	// panic("invalid use type")
+}
+
+func (r *Use) Parse() []UseType {
+	body := r.body()
+	nodes := body.toNodes()
+	// fmt.Printf("nodes %#v\n", nodes)
+
+	flattens := []string{}
+	for _, node := range nodes {
+		flattens = append(flattens, node.flatten()...)
+	}
+
+	rts := []UseType{}
+	for i := range flattens {
+		rts = append(rts, useItem(flattens[i]).Parse())
+	}
+	return rts
+	// return UseParsed{
+	// 	rts,
+	// }
+}
+
+func (r UseType) String() string {
+	modPath := strings.Join(r.ModPath, "::")
+	if modPath == "" {
+		return r.Name
+	}
+	return fmt.Sprintf("%s::%s", modPath, r.Name)
+}
+
+func (r *Use) body() useBody {
+	useReg := regexp.MustCompile(`(?mUs)use (.*);`)
+	useFinded := useReg.FindStringSubmatch(string(*r))
+	// fmt.Printf("useFinded %v\n", useFinded)
+	if len(useFinded) == 0 {
+		logger.WithField("use", *r).Panic("not found use body")
+	}
+	return useBody(useFinded[1])
+}
+
+func (b *useBody) toNodes() []useNode {
 	// trimd := regexp.MustCompile(`\s+`).ReplaceAllString(string(ru), "")
-	str = strings.TrimSpace(str)
+	str := strings.TrimSpace(string(*b))
 	if str == "" {
 		return nil
 	}
@@ -51,6 +91,9 @@ func parseUseToNodes(str string) []useNode {
 		items := strings.Split(str, ",")
 		nodes := []useNode{}
 		for _, item := range items {
+			if strings.TrimSpace(item) == "" {
+				continue
+			}
 			nodes = append(nodes, useNode{name: strings.TrimSpace(item)})
 		}
 		return nodes
@@ -67,16 +110,16 @@ func parseUseToNodes(str string) []useNode {
 		}
 		matches = append(matches, m.String())
 	}
-	fmt.Printf("matches %#v\n", matches)
+	// fmt.Printf("matches %#v\n", matches)
 
 	replaced, e := re_PAIR.Replace(str, "###", -1, -1)
 	if e != nil {
 		panic(e)
 	}
-	fmt.Printf("replaced: %s\n", replaced)
+	// fmt.Printf("replaced: %s\n", replaced)
 
 	prefixs := strings.Split(replaced, "###")
-	fmt.Printf("prefixs: %s\n", prefixs)
+	// fmt.Printf("prefixs: %s\n", prefixs)
 
 	nodes := []useNode{}
 	max := utils.MaxInt(len(prefixs), len(matches))
@@ -93,33 +136,16 @@ func parseUseToNodes(str string) []useNode {
 
 		if i < len(matches) {
 			m := matches[i]
-			nodes[len(nodes)-1].childs = parseUseToNodes(m[1 : len(m)-1])
+			subBody := useBody(m[1 : len(m)-1])
+			nodes[len(nodes)-1].childs = subBody.toNodes()
 		}
 
 	}
-	fmt.Printf("nodes %+v\n", nodes)
+	logger.WithField("nodes", nodes).WithField("use", *b).Debug("use to nodes")
 	return nodes
 }
 
-func (r *Use) Parse() UseParsed {
-	nodes := parseUseToNodes(string(*r))
-	fmt.Printf("nodes %#v\n", nodes)
-
-	flattens := []string{}
-	for _, node := range nodes {
-		flattens = append(flattens, node.flatten()...)
-	}
-
-	rts := []UseType{}
-	for i := range flattens {
-		rts = append(rts, useItem(flattens[i]).Parse())
-	}
-	return UseParsed{
-		rts,
-	}
-}
-
-func (u useNode) flatten() []string {
+func (u *useNode) flatten() []string {
 
 	if len(u.childs) == 0 {
 		return []string{u.name}

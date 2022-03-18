@@ -12,16 +12,16 @@ import (
 
 func TestParseUse(t *testing.T) {
 	uses := []Use{
-		`crate::rpc::types::eth::{BlockNumber, LocalizedTrace, TraceFilter}`,
-		`cfx_types::H256`,
-		`jsonrpc_core::Result as JsonRpcResult`,
-		`jsonrpc_derive::rpc`,
-		`cfxcore::{observer::trace::Outcome, vm::CallType as CfxCallType}`,
-		`std::{convert::{TryFrom,TryInto},convert2::{TryFrom2,TryInto2},fmt,}`,
-		`std::{
+		`use crate::rpc::types::eth::{BlockNumber, LocalizedTrace, TraceFilter};`,
+		`use cfx_types::H256;`,
+		`use jsonrpc_core::Result as JsonRpcResult;`,
+		`use jsonrpc_derive::rpc;`,
+		`use cfxcore::{observer::trace::Outcome, vm::CallType as CfxCallType};`,
+		`use std::{convert::{TryFrom,TryInto},convert2::{TryFrom2,TryInto2},fmt,};`,
+		`use std::{
 			convert::{TryFrom, TryInto},
 			fmt,
-		}`,
+		};`,
 	}
 
 	// std, {convert::{TryFrom,TryInto},convert2::{TryFrom2,TryInto2},fmt,}

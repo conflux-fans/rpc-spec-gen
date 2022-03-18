@@ -1,9 +1,10 @@
 package rust
 
 import (
-	"fmt"
 	"regexp"
 	"strings"
+
+	"github.com/sirupsen/logrus"
 )
 
 type Struct string
@@ -32,14 +33,29 @@ type TypeParsed struct {
 	Core     *TypeParsed
 }
 
+func (t *TypeParsed) InnestCoreTypeName() string {
+	for {
+		if t.Core == nil {
+			return t.Name
+		} else {
+			t = t.Core
+		}
+	}
+}
+
 func (r Struct) Parse() StructParsed {
 	structReg := regexp.MustCompile(`(?Us)(.*)pub struct (.*)\{(.*)\}`)
 	structFinded := structReg.FindStringSubmatch(string(r))
 	// fmt.Printf("%#v\n", structFinded)
 
+	if structFinded == nil {
+		logrus.WithField("structFinded", structFinded).WithField("struct", r).Info("structFinded")
+		panic("not struct")
+	}
+
 	sComment, sName, sBody := strings.TrimSpace(structFinded[1]), strings.TrimSpace(structFinded[2]), strings.TrimSpace(structFinded[3])
 
-	fmt.Printf("comment %v\nhead %#v\nbody %#v\n", sComment, sName, sBody)
+	// fmt.Printf("comment %v\nhead %#v\nbody %#v\n", sComment, sName, sBody)
 
 	fieldReg := regexp.MustCompile(`(?Us)(.*)pub (.*): (.*),`)
 	fieldsFinded := fieldReg.FindAllStringSubmatch(sBody, -1)
@@ -47,9 +63,13 @@ func (r Struct) Parse() StructParsed {
 
 	fields := make([]FieldParsed, len(fieldsFinded))
 	for i, field := range fieldsFinded {
-		fmt.Printf("field %#v\n", field)
+		// fmt.Printf("field %#v\n", field)
 		fComment, fName, fType := strings.TrimSpace(field[1]), strings.TrimSpace(field[2]), RustType(field[3])
 		fields[i] = FieldParsed{fComment, fName, fType.Parse()}
+		logger.WithFields(logrus.Fields{
+			"field":        field[0],
+			"field parsed": fields[i],
+		}).Debug("field parsed")
 	}
 
 	return StructParsed{sComment, sName, fields}
@@ -60,7 +80,7 @@ func (r RustType) Parse() (result TypeParsed) {
 	optionReg := regexp.MustCompile(`Option<(.*)>`)
 	optionMatched := optionReg.FindStringSubmatch(string(r))
 
-	fmt.Printf("optionMatched %#v\n", optionMatched)
+	// fmt.Printf("optionMatched %#v\n", optionMatched)
 	if len(optionMatched) > 0 {
 		result.IsOption = true
 		result.Name = optionMatched[1]
@@ -71,7 +91,7 @@ func (r RustType) Parse() (result TypeParsed) {
 
 	vecReg := regexp.MustCompile(`Vec<(.*)>`)
 	vecMatched := vecReg.FindStringSubmatch(string(r))
-	fmt.Printf("vecMatched %#v\n", vecMatched)
+	// fmt.Printf("vecMatched %#v\n", vecMatched)
 	if len(vecMatched) > 0 {
 		result.IsArray = true
 		result.Name = vecMatched[1]

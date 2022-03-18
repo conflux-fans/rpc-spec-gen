@@ -9,14 +9,19 @@ import (
 type Func string
 
 type FuncParsed struct {
-	Comment    string
-	RpcMethod  string
-	FuncName   string
-	Params     []ParamParsed
-	ReturnType TypeParsed
+	Comment   string
+	RpcMethod string
+	FuncName  string
+	Params    []ParamParsed
+	Return    ReturnParsed
 }
 
 type ParamParsed struct {
+	Name string
+	Type TypeParsed
+}
+
+type ReturnParsed struct {
 	Name string
 	Type TypeParsed
 }
@@ -46,14 +51,14 @@ func (r Func) Parse() FuncParsed {
 		fmt.Printf("name %v\ntype %v\n", name, type_)
 
 		rfp.Params = append(rfp.Params, ParamParsed{
-			Name: name,
+			Name: strings.TrimSpace(name),
 			Type: RustType(type_).Parse(),
 		})
 	}
 
 	rfp.Comment = comment
 	rfp.RpcMethod = rpcMethod
-	rfp.FuncName = funcName
-	rfp.ReturnType = RustType(returns).Parse()
+	rfp.FuncName = strings.TrimSpace(funcName)
+	rfp.Return.Type = RustType(returns).Parse()
 	return rfp
 }

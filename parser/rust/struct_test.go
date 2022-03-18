@@ -21,6 +21,20 @@ func TestParseStruct(t *testing.T) {
 
 	b, _ := json.MarshalIndent(parsed, "", "  ")
 	fmt.Printf("%s\n", b)
+
+	rustStruct = `
+pub struct Account {
+	///
+	pub address: H256,
+	///
+	pub block_number: U64,
+	///
+	pub status: NodeLockStatus,
+}`
+	parsed = rustStruct.Parse()
+
+	b, _ = json.MarshalIndent(parsed, "", "  ")
+	fmt.Printf("%s\n", b)
 }
 
 func TestParseFieldType(t *testing.T) {
