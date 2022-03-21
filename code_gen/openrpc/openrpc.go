@@ -6,10 +6,12 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"time"
 
 	gconfig "github.com/Conflux-Chain/rpc-gen/config"
 	"github.com/Conflux-Chain/rpc-gen/parser/rust"
 	"github.com/Conflux-Chain/rpc-gen/parser/rust/config"
+	"github.com/Conflux-Chain/rpc-gen/utils"
 	"github.com/go-openapi/spec"
 	"github.com/sirupsen/logrus"
 	prefixed "github.com/x-cray/logrus-prefixed-formatter"
@@ -30,16 +32,19 @@ var logger = &logrus.Logger{
 
 func init() {
 	// init enum2Schema for enums which custom implement json serailize
-	blockNumS := spec.Schema{}
-	blockNumS.Type = spec.StringOrArray{"string"}
-	blockNumS.Pattern = `block number`
-	usetype2Schema["BlockNumber"] = blockNumS
+	for k, v := range customSchemas {
+		usetype2Schema[k] = *v
+	}
 }
 
 func GenSchemaByStruct(structParsed rust.StructParsed, defaultModPath []string,
 	structsInSameFile map[string]rust.Struct) spec.Schema {
 
-	logger.Info("GenSchemaByStruct")
+	logger.WithField("struct parsed", utils.MustJsonPretty(structParsed)).Info("GenSchemaByStruct")
+
+	if structParsed.Name == "LedgerInfoWithV0" {
+		time.Sleep(0)
+	}
 
 	s := spec.Schema{}
 	s.Title = structParsed.Comment
@@ -61,8 +66,8 @@ func GenSchemaByStruct(structParsed rust.StructParsed, defaultModPath []string,
 func GenSchemaByEnum(enumParsed rust.EnumParsed, defaultModPath []string,
 	structsInSameFile map[string]rust.Enum) spec.Schema {
 
-	if _, ok := usetype2Schema[enumParsed.Name]; ok {
-		return usetype2Schema[enumParsed.Name]
+	if v, ok := usetype2Schema[enumParsed.Name]; ok {
+		return v
 	}
 
 	s := spec.Schema{}
@@ -221,9 +226,8 @@ func GenMethod(funcParsed rust.FuncParsed, useTypes []rust.UseType) *Method {
 
 	method.Result = &ContentDescriptor{
 		Content: Content{
-			Name:     funcParsed.Return.Name,
-			Required: !funcParsed.Return.Type.IsOption,
-			Schema:   getUseTypeRefSchema(*ut),
+			Name:   funcParsed.Return.Name,
+			Schema: getUseTypeRefSchema(*ut),
 		},
 	}
 	return &method
@@ -417,6 +421,7 @@ func findFieldUseType(aim rust.UseType, fCoreType string, usePool []rust.Use, en
 	_, ok2 := structsPool[fCoreType]
 	if ok1 || ok2 {
 		fUseType := aim
+		fUseType.Alias = fCoreType
 		fUseType.Name = fCoreType
 		return &fUseType
 	}

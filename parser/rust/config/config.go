@@ -29,6 +29,7 @@ func (r *RustUseTypeMeta) InFilePath() string {
 	return path.Join(mainconfig.GetConfig().RustRootPath, r.file)
 }
 
+// TODO: 加一个 mod path 到 file path 的映射, 如果 RustUseTypeMetas 中找不到，从 mode path 映射中遍历解析文件查找（只需要在init时解析一遍）
 // Struct exist in rust file path
 var RustUseTypeMetas map[string]RustUseTypeMeta = map[string]RustUseTypeMeta{
 	"cfx_types::H160":          {isBaseType: true},

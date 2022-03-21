@@ -1,6 +1,7 @@
 package rust
 
 import (
+	"fmt"
 	"regexp"
 	"strings"
 
@@ -55,15 +56,17 @@ func (r Struct) Parse() StructParsed {
 
 	sComment, sName, sBody := strings.TrimSpace(structFinded[1]), strings.TrimSpace(structFinded[2]), strings.TrimSpace(structFinded[3])
 
-	// fmt.Printf("comment %v\nhead %#v\nbody %#v\n", sComment, sName, sBody)
+	fmt.Printf("comment %v\nhead %#v\nbody %#v\n", sComment, sName, sBody)
 
+	// TODO： 解析LedgerInfoWithV0不正确
 	fieldReg := regexp.MustCompile(`(?Us)(.*)pub (.*): (.*),`)
+	// fieldReg := regexp.MustCompile(`(?Us)(.*)(pub|)\s*(.*):\s*(.*),`)
 	fieldsFinded := fieldReg.FindAllStringSubmatch(sBody, -1)
 	// fmt.Printf("fieldsFinded %#v\n", fieldsFinded[0])
 
 	fields := make([]FieldParsed, len(fieldsFinded))
 	for i, field := range fieldsFinded {
-		// fmt.Printf("field %#v\n", field)
+		fmt.Printf("field %#v\n", field)
 		fComment, fName, fType := strings.TrimSpace(field[1]), strings.TrimSpace(field[2]), RustType(field[3])
 		fields[i] = FieldParsed{fComment, fName, fType.Parse()}
 		logger.WithFields(logrus.Fields{

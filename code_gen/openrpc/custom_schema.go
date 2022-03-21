@@ -62,6 +62,45 @@ var basetypeSchemas = map[string]*spec.Schema{
 	},
 }
 
+// "BlockTag": {
+// 	"title": "Block tag",
+// 	"type": "string",
+// 	"enum": ["earliest", "latest", "pending"]
+// },
+// "BlockNumberOrTag": {
+// 	"title": "Block number or tag",
+// 	"oneOf": [
+// 		{
+// 			"title": "Block number",
+// 			"$ref": "#/components/schemas/uint"
+// 		},
+// 		{
+// 			"title": "Block tag",
+// 			"$ref": "#/components/schemas/BlockTag"
+// 		}
+// 	]
+// }
+var customSchemas = map[string]*spec.Schema{
+	"BlockNumber": {
+		SchemaProps: spec.SchemaProps{
+			OneOf: []spec.Schema{
+				{
+					SchemaProps: spec.SchemaProps{
+						Title: "Block number",
+						Ref:   spec.MustCreateRef(schemaRefRoot + "U64"),
+					},
+				},
+				{
+					SchemaProps: spec.SchemaProps{
+						Title: "Block tag",
+						Enum:  []interface{}{"earliest", "latest_committed", "latest_voted"},
+					},
+				},
+			},
+		},
+	},
+}
+
 func mustGetBasetypeSchemasByUseType(useType rust.UseType) *spec.Schema {
 	meta, ok := config.GetUseTypeMeta(useType)
 	if !ok {
