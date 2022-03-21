@@ -7,8 +7,8 @@ import (
 type OpenRPCSpec1 struct {
 	OpenRPC      string        `json:"openrpc,omitempty"`
 	Info         Info          `json:"info,omitempty"`
-	Servers      []Server      `json:"servers,omitempty"`
-	Methods      []Method      `json:"methods,omitempty"`
+	Servers      []*Server     `json:"servers,omitempty"`
+	Methods      []*Method     `json:"methods,omitempty"`
 	Components   *Components   `json:"components,omitempty"`
 	ExternalDocs *ExternalDocs `json:"externalDocs,omitempty"`
 }
@@ -109,7 +109,7 @@ type Error struct {
 
 type Components struct {
 	ContentDescriptors    map[string]*ContentDescriptor `json:"contentDescriptors,omitempty"`
-	Schemas               map[string]spec.Schema        `json:"schemas,omitempty"`
+	Schemas               map[string]*spec.Schema       `json:"schemas,omitempty"`
 	Examples              map[string]Example            `json:"examples,omitempty"`
 	Links                 map[string]Link               `json:"links,omitempty"`
 	Errors                map[string]Error              `json:"errors,omitempty"`

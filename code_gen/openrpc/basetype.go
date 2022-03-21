@@ -1,8 +1,12 @@
 package openrpc
 
-import "github.com/go-openapi/spec"
+import (
+	"github.com/Conflux-Chain/rpc-gen/parser/rust"
+	"github.com/Conflux-Chain/rpc-gen/parser/rust/config"
+	"github.com/go-openapi/spec"
+)
 
-var basetypeSchemas = map[string]spec.Schema{
+var basetypeSchemas = map[string]*spec.Schema{
 	"bool": {
 		SchemaProps: spec.SchemaProps{
 			Type: spec.StringOrArray{"boolean"},
@@ -32,4 +36,11 @@ var basetypeSchemas = map[string]spec.Schema{
 			Pattern: "^0x([1-9a-f][0-9a-f]{0,15}|0)$",
 		},
 	},
+}
+
+func mustGetBasetypeSchemasByUseType(useType rust.UseType) *spec.Schema {
+	if config.GetUseTypeMeta(useType).IsBaseType() {
+		return basetypeSchemas[useType.Name]
+	}
+	panic("not basetype")
 }

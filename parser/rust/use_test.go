@@ -22,6 +22,12 @@ func TestParseUse(t *testing.T) {
 			convert::{TryFrom, TryInto},
 			fmt,
 		};`,
+		`use crate::{
+			epoch_change::Verifier,
+			ledger_info::{LedgerInfo, LedgerInfoWithSignatures},
+			on_chain_config::OnChainConfig,
+			validator_verifier::ValidatorVerifier,
+		};`,
 	}
 
 	// std, {convert::{TryFrom,TryInto},convert2::{TryFrom2,TryInto2},fmt,}

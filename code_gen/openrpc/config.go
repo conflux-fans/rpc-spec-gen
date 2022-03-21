@@ -23,16 +23,29 @@ func getSchemaSavePath(space string, schemaFullName string) string {
 	return path.Join(config.GetConfig().SchemaRootPath, getSchemaSaveRelativePath(space, schemaFullName))
 }
 
-func getSchemaRef(useType rust.UseType) spec.Schema {
+func getUseTypeRefSchema(useType rust.UseType) spec.Schema {
 	s := spec.Schema{}
 	// schemaName := strings.ReplaceAll(getSchemaSaveRelativePath(useType), "/", "_")
+
+	// TODO: 如果ModdPath为空，则直接使用useType.Name
+
 	schemaName := strings.Join(useType.ModPath, "__") + "__" + useType.Name
 	s.Ref = spec.MustCreateRef(schemaRefRoot + schemaName)
 	return s
 }
 
 func parseSchemaRefToUseType(ref string) rust.UseType {
-	matchs := regexp.MustCompile(schemaRefRoot + `(.*)__(.*)`).FindStringSubmatch(ref)
+
+	fullUseType := strings.TrimPrefix(ref, schemaRefRoot)
+	matchs := regexp.MustCompile(`(.*)__(.*)`).FindStringSubmatch(fullUseType)
+
+	if len(matchs) != 3 {
+		logger.WithField("ref", ref).Debug("parse to a base type")
+		return rust.UseType{
+			Name: fullUseType,
+		}
+	}
+
 	fullName := matchs[1]
 
 	return rust.UseType{

@@ -35,8 +35,8 @@ func MustNewUseType(usetype string) UseType {
 	// panic("invalid use type")
 }
 
-func (r *Use) Parse() []UseType {
-	body := r.body()
+func (u *Use) Parse() []UseType {
+	body := u.body()
 	nodes := body.toNodes()
 	// fmt.Printf("nodes %#v\n", nodes)
 
@@ -45,14 +45,11 @@ func (r *Use) Parse() []UseType {
 		flattens = append(flattens, node.flatten()...)
 	}
 
-	rts := []UseType{}
+	uts := []UseType{}
 	for i := range flattens {
-		rts = append(rts, useItem(flattens[i]).Parse())
+		uts = append(uts, useItem(flattens[i]).Parse())
 	}
-	return rts
-	// return UseParsed{
-	// 	rts,
-	// }
+	return uts
 }
 
 func (r UseType) String() string {
@@ -208,8 +205,9 @@ func (u *useNode) flatten() []string {
 // 	return result
 // }
 
-func (ri useItem) Parse() UseType {
-	parts := strings.Split(string(ri), "::")
+func (ui useItem) Parse() UseType {
+	nospaces := regexp.MustCompile(`\s+`).ReplaceAllString(string(ui), "")
+	parts := strings.Split(nospaces, "::")
 	last := parts[len(parts)-1]
 
 	//jsonrpc_core::Result as JsonRpcResult

@@ -98,8 +98,10 @@ func getStructsOrEnums(content string, re *regexp2.Regexp) (map[string]string, [
 	if e != nil {
 		panic(e)
 	}
+
+	us := GetUses(content)
 	if m == nil {
-		return nil, nil
+		return nil, us
 	}
 
 	structOrEnums := make(map[string]string)
@@ -113,7 +115,7 @@ func getStructsOrEnums(content string, re *regexp2.Regexp) (map[string]string, [
 		}
 	}
 
-	return structOrEnums, GetUses(content)
+	return structOrEnums, us
 }
 
 func getStructName(m *regexp2.Match) string {

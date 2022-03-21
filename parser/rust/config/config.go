@@ -72,6 +72,8 @@ var RustUseTypeMetas map[string]RustUseTypeMeta = map[string]RustUseTypeMeta{
 
 	"super::Decision": {false, "client/src/rpc/types/pos/decision.rs"},
 	"diem_types::block_info::PivotBlockDecision": {false, "core/src/pos/types/src/block_info.rs"},
+
+	"crate::validator_verifier::ValidatorVerifier": {false, "core/src/pos/types/src/validator_verifier.rs"},
 }
 
 var IgnoredUseTypes map[string]bool = map[string]bool{
