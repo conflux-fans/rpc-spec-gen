@@ -49,8 +49,8 @@ func fillComponent(comp *Components, schema *spec.Schema, space string) {
 
 	useType := parseSchemaRefToUseType(schema.Ref.String())
 
-	meta := config.GetUseTypeMeta(useType)
-	if meta == nil {
+	meta, ok := config.GetUseTypeMeta(useType)
+	if !ok {
 		logger.WithFields(logrus.Fields{
 			"useType":    useType.String(),
 			"schema ref": schema.Ref.String(),

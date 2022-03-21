@@ -32,7 +32,6 @@ var (
 func MustNewUseType(usetype string) UseType {
 	u := useItem(usetype)
 	return u.Parse()
-	// panic("invalid use type")
 }
 
 func (u *Use) Parse() []UseType {
@@ -71,13 +70,10 @@ func (r *Use) body() useBody {
 }
 
 func (b *useBody) toNodes() []useNode {
-	// trimd := regexp.MustCompile(`\s+`).ReplaceAllString(string(ru), "")
 	str := strings.TrimSpace(string(*b))
 	if str == "" {
 		return nil
 	}
-
-	// re := regexp2.MustCompile(`\{(?>[^{}]+|\{(?<DEPTH>)|\}(?<-DEPTH>))*(?(DEPTH)(?!))\}`, regexp2.Multiline)
 
 	matches := []string{}
 	m, e := re_PAIR.FindStringMatch(str)
@@ -158,53 +154,6 @@ func (u *useNode) flatten() []string {
 	return flattened
 }
 
-// // use crate::rpc::types::eth::{BlockNumber, LocalizedTrace, TraceFilter};
-// // use cfx_types::H256;
-// // use jsonrpc_core::Result as JsonRpcResult;
-// // use jsonrpc_derive::rpc;
-// func (ru RustUse) Parse() RustUseParsed {
-// 	result := RustUseParsed{}
-
-// 	trimd := regexp.MustCompile(`\s+`).ReplaceAllString(string(ru), "")
-// 	finds := regexp.MustCompile(`(?U)(.*)::{(.*)}`).FindStringSubmatch(trimd)
-// 	if finds == nil {
-// 		result.Types = append(result.Types, rustUseItem(ru).Parse())
-// 		return result
-// 	}
-
-// 	modPath, itemsJoined := finds[1], finds[2]
-
-// 	// 如果 itemsJoined 还是 {...},
-
-// 	items := strings.Split(itemsJoined, ",")
-// 	for _, item := range items {
-// 		item = strings.TrimSpace(item)
-// 		if item == "" {
-// 			continue
-// 		}
-// 		result.Types = append(result.Types, RustUse(modPath+"::"+item).Parse().Types...)
-// 	}
-// 	return result
-// }
-
-// func (ru RustUse) Flatten() []rustUseItem {
-// 	result := []rustUseItem{}
-// 	trimd := regexp.MustCompile(`\s+`).ReplaceAllString(string(ru), "")
-// 	finds := regexp.MustCompile(`(?U)(.*)::{(.*)}`).FindStringSubmatch(trimd)
-// 	if finds == nil {
-// 		result = append(result, rustUseItem(ru))
-// 		return result
-// 	}
-
-// 	// finds[1]: std, finds[2]: convert::{TryFrom,TryInto},convert2::{TryFrom2,TryInto2},fmt,
-// 	modPath, itemsJoined := finds[1], finds[2]
-// 	subRustUses := RustUse(itemsJoined).Flatten()
-// 	for _, subUse := range subRustUses {
-// 		result = append(result, rustUseItem(modPath+"::"+string(subUse)))
-// 	}
-// 	return result
-// }
-
 func (ui useItem) Parse() UseType {
 	nospaces := regexp.MustCompile(`\s+`).ReplaceAllString(string(ui), "")
 	parts := strings.Split(nospaces, "::")
@@ -219,10 +168,7 @@ func (ui useItem) Parse() UseType {
 			Alias:   strings.TrimSpace(finds[2]),
 		}
 	}
-	// // cfx_types::H256
-	// matched, _ := regexp.MatchString(`^\w+$`, last)
-	// if matched {
-	// }
+
 	return UseType{
 		ModPath: parts[0 : len(parts)-1],
 		Name:    strings.TrimSpace(last),

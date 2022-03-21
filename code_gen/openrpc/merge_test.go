@@ -20,11 +20,11 @@ func TestGetRelatedSchemas(t *testing.T) {
 		"properties": {
 		  "address": {
 			"title": "address",
-			"$ref": "#/components/schemas/__H256"
+			"$ref": "#/components/schemas/H256"
 		  },
 		  "block_number": {
 			"title": "block_number",
-			"$ref": "#/components/schemas/__U64"
+			"$ref": "#/components/schemas/U64"
 		  },
 		  "status": {
 			"title": "status",

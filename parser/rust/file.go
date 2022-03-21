@@ -15,12 +15,10 @@ func FindStruct(content string, structName string) (Struct, []Use) {
 		panic(e)
 	}
 	if matched == nil {
-		// panic(fmt.Sprintf("can't find struct %v", structName))
 		logrus.WithFields(logrus.Fields{
 			"structName": structName,
 			"content:":   content,
 		}).Panic("can't find struct")
-		panic("can't find struct")
 	}
 
 	s := Struct(matched.String())
@@ -61,27 +59,6 @@ func GetStructs(content string) (map[string]Struct, []Use) {
 		structs[k] = Struct(v)
 	}
 	return structs, uses
-
-	// m, e := re.FindStringMatch(content)
-	// if e != nil {
-	// 	panic(e)
-	// }
-	// if m == nil {
-	// 	return nil, nil
-	// }
-
-	// structs := make(map[string]Struct)
-	// // structs[getStructName(m)] = Struct(m.String())
-
-	// for m != nil {
-	// 	structs[getStructName(m)] = Struct(m.String())
-	// 	m, e = re.FindNextMatch(m)
-	// 	if e != nil {
-	// 		panic(e)
-	// 	}
-	// }
-
-	// return structs, GetUses(content)
 }
 
 func GetEnums(content string) (map[string]Enum, []Use) {
@@ -106,7 +83,6 @@ func getStructsOrEnums(content string, re *regexp2.Regexp) (map[string]string, [
 	}
 
 	structOrEnums := make(map[string]string)
-	// structs[getStructName(m)] = Struct(m.String())
 
 	for m != nil {
 		structOrEnums[getStructName(m)] = m.String()

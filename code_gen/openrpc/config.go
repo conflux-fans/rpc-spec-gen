@@ -25,7 +25,6 @@ func getSchemaSavePath(space string, schemaFullName string) string {
 func getUseTypeRefSchema(useType rust.UseType) spec.Schema {
 	s := spec.Schema{}
 
-	// TODO: 如果ModdPath为空，则直接使用useType.Name
 	schemaName := strings.Join(useType.ModPath, "__") + "__" + useType.Name
 	schemaName = strings.TrimPrefix(schemaName, "__")
 	s.Ref = spec.MustCreateRef(schemaRefRoot + schemaName)

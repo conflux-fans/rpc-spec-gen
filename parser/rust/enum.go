@@ -1,7 +1,6 @@
 package rust
 
 import (
-	"fmt"
 	"regexp"
 	"strings"
 
@@ -25,7 +24,6 @@ type EnumItemsParsed struct {
 func (e Enum) Parse() EnumParsed {
 	re := regexp.MustCompile(`(?Us)(.*)pub enum (.*)\{(.*)\}`)
 	finds := re.FindStringSubmatch(string(e))
-	// fmt.Printf("%#v\n", structFinded)
 
 	if finds == nil {
 		logrus.WithField("enum Finded", finds).WithField("enum", e).Panic("not enum")
@@ -34,15 +32,14 @@ func (e Enum) Parse() EnumParsed {
 
 	sComment, sName, sBody := strings.TrimSpace(finds[1]), strings.TrimSpace(finds[2]), strings.TrimSpace(finds[3])
 
-	fmt.Printf("comment %v\nhead %#v\nbody %#v\n", sComment, sName, sBody)
+	// fmt.Printf("comment %v\nhead %#v\nbody %#v\n", sComment, sName, sBody)
 
 	iRe := regexp.MustCompile(`(?Um)(\/\/\/.*|^)\s*(\w+|\w+\((.*)\)),`)
 	iFinds := iRe.FindAllStringSubmatch(sBody, -1)
-	// fmt.Printf("fieldsFinded %#v\n", fieldsFinded[0])
 
 	items := make([]EnumItemsParsed, len(iFinds))
 	for idx, item := range iFinds {
-		fmt.Printf("item %#v\n", item)
+		// fmt.Printf("item %#v\n", item)
 		iComment, iValue := strings.TrimSpace(item[1]), strings.TrimSpace(item[2])
 
 		var tupleParams []TypeParsed

@@ -63,8 +63,8 @@ var basetypeSchemas = map[string]*spec.Schema{
 }
 
 func mustGetBasetypeSchemasByUseType(useType rust.UseType) *spec.Schema {
-	meta := config.GetUseTypeMeta(useType)
-	if meta == nil {
+	meta, ok := config.GetUseTypeMeta(useType)
+	if !ok {
 		logger.Panicf("meta is nil for useType: %s", useType.String())
 	}
 	if meta.IsBaseType() {

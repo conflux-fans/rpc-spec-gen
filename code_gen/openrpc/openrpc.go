@@ -101,17 +101,13 @@ func GenSchemas(useTypes []rust.UseType) map[string]spec.Schema {
 			continue
 		}
 
-		if config.IgnoredUseTypes[useType.String()] {
-			continue
-		}
+		meta, ok := config.GetUseTypeMeta(useType)
 
-		meta := config.GetUseTypeMeta(useType)
-
-		if meta == nil {
+		if !ok {
 			panic(fmt.Sprintf("not found meta of %v", useType.String()))
 		}
 
-		if meta.IsBaseType() {
+		if meta.IsBaseType() || meta.IsIgnore() {
 			continue
 		}
 
