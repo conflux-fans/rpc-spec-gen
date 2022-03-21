@@ -40,11 +40,23 @@ var RustUseTypeMetas map[string]RustUseTypeMeta = map[string]RustUseTypeMeta{
 	"super::super::RpcAddress": {true, ""},
 	"u64":                      {true, ""},
 	"u8":                       {true, ""},
+	"RpcAddress":               {true, ""},
 
 	// FIXME: remove this
-	"crate::rpc::types::pos::RpcTransactionPayload": {true, ""},
-	"crate::rpc::types::pos::RpcTransactionStatus":  {true, ""},
-	"crate::rpc::types::pos::RpcTransactionType":    {true, ""},
+	// "crate::rpc::types::pos::RpcTransactionPayload": {true, ""},
+	// "crate::rpc::types::pos::RpcTransactionStatus":  {true, ""},
+	// "crate::rpc::types::pos::RpcTransactionType":    {true, ""},
+
+	"crate::rpc::types::pos::RpcTransactionStatus":     {false, "client/src/rpc/types/pos/transaction.rs"},
+	"crate::rpc::types::pos::RpcTransactionType":       {false, "client/src/rpc/types/pos/transaction.rs"},
+	"crate::rpc::types::pos::RpcTransactionPayload":    {false, "client/src/rpc/types/pos/transaction.rs"},
+	"crate::rpc::types::pos::RegisterPayload":          {false, "client/src/rpc/types/pos/transaction.rs"},
+	"crate::rpc::types::pos::ElectionPayload":          {false, "client/src/rpc/types/pos/transaction.rs"},
+	"crate::rpc::types::pos::UpdateVotingPowerPayload": {false, "client/src/rpc/types/pos/transaction.rs"},
+	"crate::rpc::types::pos::PivotDecisionPayload":     {false, "client/src/rpc/types/pos/transaction.rs"},
+	"crate::rpc::types::pos::RetirePayload":            {false, "client/src/rpc/types/pos/transaction.rs"},
+	"crate::rpc::types::pos::DisputePayload":           {false, "client/src/rpc/types/pos/transaction.rs"},
+	"crate::rpc::types::pos::ConflictingVotes":         {false, "client/src/rpc/types/pos/transaction.rs"},
 
 	"crate::rpc::types::pos::Account":        {false, "client/src/rpc/types/pos/account.rs"},
 	"crate::rpc::types::pos::Block":          {false, "client/src/rpc/types/pos/block.rs"},
@@ -56,6 +68,7 @@ var RustUseTypeMetas map[string]RustUseTypeMeta = map[string]RustUseTypeMeta{
 
 	"diem_types::epoch_state::EpochState":               {false, "core/src/pos/types/src/epoch_state.rs"},
 	"diem_types::ledger_info::LedgerInfoWithSignatures": {false, "core/src/pos/types/src/ledger_info.rs"},
+	"diem_types::ledger_info::LedgerInfoWithV0":         {false, "core/src/pos/types/src/ledger_info.rs"},
 
 	"crate::rpc::types::pos::NodeLockStatus": {false, "client/src/rpc/types/pos/node_lock_status.rs"},
 	"crate::rpc::types::pos::VotePowerState": {false, "client/src/rpc/types/pos/node_lock_status.rs"},
@@ -77,11 +90,12 @@ var RustUseTypeMetas map[string]RustUseTypeMeta = map[string]RustUseTypeMeta{
 }
 
 var IgnoredUseTypes map[string]bool = map[string]bool{
-	"jsonrpc_core::Result":    true,
-	"jsonrpc_derive::rpc":     true,
-	"serde_derive::Serialize": true,
-	"serde::de::Error":        true,
-	"serde::Serialize":        true,
+	"jsonrpc_core::Result":                true,
+	"jsonrpc_core::ResultasJsonRpcResult": true,
+	"jsonrpc_derive::rpc":                 true,
+	"serde_derive::Serialize":             true,
+	"serde::de::Error":                    true,
+	"serde::Serialize":                    true,
 }
 
 func GetUseTypeMeta(useType rust.UseType) *RustUseTypeMeta {

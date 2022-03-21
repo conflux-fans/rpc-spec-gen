@@ -44,7 +44,7 @@ func main() {
 	// }
 	// // return
 
-	traitsFile := "/Users/wangdayong/myspace/mywork/conflux-rust/client/src/rpc/traits/cfx_space/pos_test.rs"
+	traitsFile := "/Users/wangdayong/myspace/mywork/conflux-rust/client/src/rpc/traits/cfx_space/pos.rs"
 
 	space := path.Join(traitsFile, "..")[len("/Users/wangdayong/myspace/mywork/conflux-rust/client/src/rpc/traits/"):]
 

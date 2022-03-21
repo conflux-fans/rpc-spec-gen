@@ -53,7 +53,8 @@ func GetTraits(content string) ([]Trait, []Use) {
 }
 
 func GetStructs(content string) (map[string]Struct, []Use) {
-	var re = regexp2.MustCompile(`\/\/\/(?:.(?!\/\/\/))+pub struct ([^\{]*) \{.*?}|pub struct ([^\{]*) \{.*?}`, regexp2.Multiline|regexp2.Singleline)
+	// var re = regexp2.MustCompile(`\/\/\/(?:.(?!\/\/\/))+pub struct ([^\{]*) \{.*?}|pub struct ([^\{]*) \{.*?}`, regexp2.Multiline|regexp2.Singleline)
+	var re = regexp2.MustCompile(`\/\/\/[^{}]+pub struct ([^\{]*) \{.*?}|pub struct ([^\{]*) \{.*?}`, regexp2.Multiline|regexp2.Singleline)
 	ss, uses := getStructsOrEnums(content, re)
 	structs := make(map[string]Struct)
 	for k, v := range ss {

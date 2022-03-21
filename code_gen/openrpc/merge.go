@@ -6,6 +6,7 @@ import (
 
 	"github.com/Conflux-Chain/rpc-gen/parser/rust"
 	"github.com/Conflux-Chain/rpc-gen/parser/rust/config"
+	"github.com/Conflux-Chain/rpc-gen/utils"
 	"github.com/go-openapi/spec"
 	"github.com/sirupsen/logrus"
 )
@@ -169,7 +170,10 @@ func getRelatedSchemas(s spec.Schema, space string) []*spec.Schema {
 		for k, v := range s.Properties {
 			result := getRelatedSchemas(v, space)
 			j, _ := json.MarshalIndent(result, "", "  ")
-			logger.WithField("schema", k).WithField("result", string(j)).Debug("getRelatedSchemas")
+			logger.WithFields(logrus.Fields{
+				"schema": k,
+				"result": string(j),
+			}).Debug("getRelatedSchemas")
 			schemas = append(schemas, result...)
 			j, _ = json.MarshalIndent(schemas, "", "  ")
 			logger.WithField("schemas", string(j)).Debug("append schemas")
@@ -180,6 +184,16 @@ func getRelatedSchemas(s spec.Schema, space string) []*spec.Schema {
 	if s.Ref.String() != "" {
 		useType := parseSchemaRefToUseType(s.Ref.String())
 		realSchema := mustLoadSchema(space, useType)
+
+		if realSchema == nil {
+			logger.WithField("useType", useType).Panic("not found schema")
+		}
+
+		logger.WithFields(logrus.Fields{
+			"space":      useType.String(),
+			"realSchema": utils.MustJsonPretty(realSchema),
+			"result":     getRelatedSchemas(*realSchema, space),
+		}).Debug("getRelatedSchemas")
 		schemas = append(schemas, getRelatedSchemas(*realSchema, space)...)
 	}
 
