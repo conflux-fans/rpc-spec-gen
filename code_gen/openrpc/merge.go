@@ -64,48 +64,6 @@ func fillComponent(comp *Components, schema *spec.Schema, space string) {
 	comp.Schemas[useType.Name] = mustLoadSchema(space, useType)
 }
 
-// // 填充 component schemas， 递归查找每个schema的field并将其schema填充到targets中， 最后返回值为该 refWithFullname 对应的 ref with name 值
-// func recrusiveFillSchemas(refWithFullname string, space string, targets map[string]spec.Schema) spec.Ref {
-
-// 	// logger.WithField("refWithFullname", refWithFullname).Debug("recrusiveFillSchemas")
-// 	// if refWithFullname == "" {
-// 	// 	time.Sleep(0)
-// 	// }
-
-// 	useType := parseSchemaRefToUseType(refWithFullname)
-
-// 	refWithName := spec.MustCreateRef(schemaRefRoot + useType.Name)
-
-// 	if _, ok := targets[useType.Name]; ok {
-// 		return refWithName
-// 	}
-
-// 	meta := rustconfig.GetUseTypeMeta(useType)
-// 	if meta == nil {
-// 		panic("not found useType meta of " + useType.String())
-// 	}
-
-// 	if meta.IsBaseType() {
-// 		targets[useType.Name] = basetypeSchemas[useType.Name]
-// 		return refWithName
-// 	}
-
-// 	// schema := mustLoadSchema(space, useType)
-
-// 	// // 设置 fields ref 为 name
-// 	// for k, field := range schema.Properties {
-// 	// 	if field.Ref.String() != "" {
-// 	// 		_refWithName := recrusiveFillSchemas(field.Ref.String(), space, targets)
-// 	// 		field.Ref = spec.MustCreateRef(_refWithName)
-// 	// 		schema.Properties[k] = field
-// 	// 	}
-// 	// }
-
-// 	// 添加 fields schema 到 targets
-// 	// targets[useType.Name] = schema
-// 	return refWithName
-// }
-
 func convet2RefWithName(refWithFullname string) spec.Ref {
 	useType := parseSchemaRefToUseType(refWithFullname)
 	refWithName := spec.MustCreateRef(schemaRefRoot + useType.Name)
@@ -113,9 +71,6 @@ func convet2RefWithName(refWithFullname string) spec.Ref {
 }
 
 func setSchemaRefBeName(s *spec.Schema) {
-	// s.Items
-	// s.OneOf
-	// s.Properties
 	if s == nil {
 		return
 	}
@@ -200,7 +155,7 @@ func getRelatedSchemas(s spec.Schema, space string) []*spec.Schema {
 	return schemas
 }
 
-// 不会递归查找
+// 不会递归查找子项schema
 func getDocAllSchemas(doc OpenRPCSpec1, space string) []*spec.Schema {
 	// 查找所有schema
 	var schemas []*spec.Schema

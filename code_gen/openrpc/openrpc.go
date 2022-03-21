@@ -36,7 +36,6 @@ func init() {
 	usetype2Schema["BlockNumber"] = blockNumS
 }
 
-// TODO: gen schema for field type
 func GenSchemaByStruct(structParsed rust.StructParsed, defaultModPath []string,
 	structsInSameFile map[string]rust.Struct) spec.Schema {
 
@@ -51,16 +50,6 @@ func GenSchemaByStruct(structParsed rust.StructParsed, defaultModPath []string,
 		// 生成field的schema ref
 		// 	先从 usetype2Schema , basetypes 匹配
 		// 	若都未匹配到则设置为与struct同级别usetype
-		// ut := findUseType(field.Type.Name, getCachedUseTypes())
-		// if ut == nil && config.IsBaseType(field.Type.Name) {
-		// 	tmp := rust.MustNewUseType(field.Type.Name)
-		// 	ut = &tmp
-		// }
-		// if ut == nil {
-		// 	ut = getSameLevelUseType(field.Type.Name, defaultModPath)
-		// }
-		// refSchema := getUseTypeRefSchema(*ut)
-
 		refSchema := genObjRefSchema(field.Type, defaultModPath)
 		refSchema.Title = field.Name
 		s.Properties[field.Name] = *refSchema
@@ -78,10 +67,8 @@ func GenSchemaByEnum(enumParsed rust.EnumParsed, defaultModPath []string,
 
 	s := spec.Schema{}
 	s.Title = enumParsed.Comment
-	// s.Type = spec.StringOrArray{"string"}
 	s.Properties = make(map[string]spec.Schema, len(enumParsed.Fields))
 
-	// TODO: should set enum values
 	for _, field := range enumParsed.Fields {
 		// 是否tumple
 		// 如果是tumple，参数的ref生成步骤为：
@@ -94,30 +81,11 @@ func GenSchemaByEnum(enumParsed rust.EnumParsed, defaultModPath []string,
 				logger.WithField("field", field).Panic("enum tumple field should be custom")
 			}
 
-			// // TODO: 这里根据最内层类型生成schema是不对的，应该从内到外层层解析增加 require array 等描述
-			// typeName := field.TupleParams[0].InnestCoreTypeName()
-			// ut := getUseType(typeName, defaultModPath, getCachedUseTypes())
-			// // fSchema := spec.Schema{}
-			// refSchema := getUseTypeRefSchema(*ut)
-			// refSchema.Title = field.TupleParams[0].Name
-
 			refSchema := genObjRefSchema(field.TupleParams[0], defaultModPath)
 			s.OneOf = append(s.OneOf, *refSchema)
 			continue
 		}
 		s.Enum = append(s.Enum, field.Value)
-
-		// ut := findUseType(field.Name, getCacheUseTypes())
-		// if ut == nil && config.IsBaseType(field.Type.Name) {
-		// 	tmp := rust.MustNewUseType(field.Type.Name)
-		// 	ut = &tmp
-		// }
-		// if ut == nil {
-		// 	ut = getSameLevelUseType(field.Type.Name, myUseType)
-		// }
-		// refSchema := getSchemaRef(*ut)
-		// refSchema.Title = field.Name
-		// s.Properties[field.Name] = refSchema
 	}
 
 	return s
@@ -165,8 +133,9 @@ func GenSchemas(useTypes []rust.UseType) map[string]spec.Schema {
 		}
 		// s, us := rust.FindStruct(string(code), useType.Name)
 
-		// 获得code中的所有struct，以struct名为key，struct解析结果为value
-		structs, us := rust.GetStructs(string(code))
+		// 获得code中的所有struct，以struct名为key，struct为value
+		structs, _ := rust.GetStructs(string(code))
+		// 获得code中的所有enum，以enum名为key，enum为value
 		enums, us := rust.GetEnums(string(code))
 
 		logger.WithFields(logrus.Fields{
@@ -184,26 +153,11 @@ func GenSchemas(useTypes []rust.UseType) map[string]spec.Schema {
 			}).Debug("filter struct field using use types")
 			GenSchemas(fieldUsetypes)
 
-			// logger.Info("sdfsdfsdfsdfsdfsdf")
-
 			usetype2Schema[useType.String()] = GenSchemaByStruct(_strcut.Parse(), useType.ModPath, structs)
 			continue
 		}
 
 		if _enum, ok := enums[useType.Name]; ok {
-			// for _, u := range us {
-			// 	useTypes = append(useTypes, u.Parse()...)
-			// }
-			// TODO: 只过滤field里边包含的useType
-			// _us := []rust.UseType{}
-			// for _, u := range us {
-			// 	_us = append(_us, u.Parse()...)
-			// }
-			// logger.WithFields(logrus.Fields{
-			// 	"useType": useType,
-			// 	"us":      _us,
-			// }).Debug("")
-			// GenSchemas(_us)
 			fieldUsetypes := getEnumFieldUseTypes(useType, us, enums, structs)
 			logger.WithFields(logrus.Fields{
 				"enum in useType": useType,
@@ -238,15 +192,6 @@ func SaveSchemas(useTypes []rust.UseType, space string) {
 		p := getSchemaSavePath(space, k)
 
 		saveFile(p, j)
-		// if _, err := os.Stat(p); os.IsNotExist(err) {
-		// 	folder := path.Join(p, "../")
-		// 	os.MkdirAll(folder, 0700)
-		// }
-
-		// e := ioutil.WriteFile(p, j, 0644)
-		// if e != nil {
-		// 	logger.Panic(e)
-		// }
 	}
 }
 
@@ -354,9 +299,6 @@ func findUseType(name string, useTypes []rust.UseType) *rust.UseType {
 		}
 	}
 	return nil
-
-	// logrus.WithField("name", name).WithField("use types", useTypes).Panic("not found useType")
-	// panic("not find")
 }
 
 func mustFindUseType(name string, useTypes []rust.UseType) *rust.UseType {
@@ -388,10 +330,6 @@ func isFieldsHasType(sp rust.StructParsed, t rust.UseType) bool {
 	return false
 }
 
-// func getFieldUseTypes(aim rust.UseType, usePool []rust.Use, enumsPool map[string]rust.Enum, structPool map[string]rust.Struct) {
-// 	getStructFieldUseTypes(aim, structPool, usePool)
-// }
-
 // 寻找useType对应struct的struct fields中在usetypes的匹配类型，如果没有在当前文件的所有structs中寻找
 func getStructFieldUseTypes(aim rust.UseType, usePool []rust.Use, structsPool map[string]rust.Struct, enumsPool map[string]rust.Enum) []rust.UseType {
 	var founds []rust.UseType
@@ -419,56 +357,7 @@ func getStructFieldUseTypes(aim rust.UseType, usePool []rust.Use, structsPool ma
 				founds = append(founds, *finded)
 				continue
 			}
-
-			// unfounds = append(unfounds, fCoreType)
 			panic(fmt.Sprintf("not find useType %v", fCoreType))
-
-			// fCoreType := field.Type.InnestCoreTypeName()
-
-			// // if fCoreType == "NodeLockStatus" {
-			// // 	logrus.Info("NodeLockStatus")
-			// // }
-
-			// finded := false
-			// for _, u := range usePool {
-			// 	uItems := u.Parse()
-
-			// 	for _, uItem := range uItems {
-			// 		if fCoreType == uItem.Name {
-			// 			finded = true
-			// 			founds = append(founds, uItem)
-			// 			break
-			// 		}
-			// 	}
-			// }
-
-			// if finded {
-			// 	continue
-			// }
-
-			// // 如果没有找到从同文件的strcuts中找sturct
-			// if _, ok := structsPool[fCoreType]; ok {
-			// 	fUseType := aim
-			// 	fUseType.Name = fCoreType
-			// 	founds = append(founds, fUseType)
-			// 	continue
-			// }
-
-			// logrus.WithFields(
-			// 	logrus.Fields{
-			// 		"aim":             aim,
-			// 		"field core type": fCoreType,
-			// 		"is base type":    config.IsBaseType(fCoreType),
-			// 	},
-			// ).Info("check is base type")
-			// if config.IsBaseType(fCoreType) {
-			// 	continue
-			// }
-
-			// unfounds = append(unfounds, fCoreType)
-
-			// panic(fmt.Sprintf("not find useType %v", fCoreType))
-
 		}
 	}
 	return founds
@@ -509,7 +398,6 @@ func getEnumFieldUseTypes(aim rust.UseType, usePool []rust.Use, enumsPool map[st
 					continue
 				}
 
-				// unfounds = append(unfounds, fCoreType)
 				panic(fmt.Sprintf("not find useType %v", fCoreType))
 			}
 
@@ -519,29 +407,15 @@ func getEnumFieldUseTypes(aim rust.UseType, usePool []rust.Use, enumsPool map[st
 }
 
 func findFieldUseType(aim rust.UseType, fCoreType string, usePool []rust.Use, enumsPool map[string]rust.Enum, structsPool map[string]rust.Struct) *rust.UseType {
-	// result := []rust.UseType{}
-
-	// if fCoreType == "NodeLockStatus" {
-	// 	logrus.Info("NodeLockStatus")
-	// }
-
-	// finded := false
 	for _, u := range usePool {
 		uItems := u.Parse()
 
 		for _, uItem := range uItems {
 			if fCoreType == uItem.Name {
-				// finded = true
-				// result = append(result, uItem)
-				// break
 				return &uItem
 			}
 		}
 	}
-
-	// if finded {
-	// 	return result
-	// }
 
 	_, ok1 := enumsPool[fCoreType]
 	_, ok2 := structsPool[fCoreType]
@@ -558,7 +432,6 @@ func findFieldUseType(aim rust.UseType, fCoreType string, usePool []rust.Use, en
 		"enums pool":      enumsPool,
 	}).Panic("not find useType")
 
-	// panic(fmt.Sprintf("not find useType %v", fCoreType))
 	return nil
 }
 
@@ -570,17 +443,11 @@ func getCachedUseTypes() []rust.UseType {
 	return useTypes
 }
 
-// pub struct Account {
-//     pub address: H256,
-//     pub block_number: Option<Vec<Option<U64>>>,
-//     pub status: NodeLockStatus,
-// }
-
 // 生成 rust.TypeParsed 的 ref schema；方法参数、返回值、结构体字段、枚举项都使用该类型
 // 从内生成ref，然后到外层层剥离，生成items，array 等描述
 func genObjRefSchema(_type rust.TypeParsed, defaultModPath []string) *spec.Schema {
 	s := spec.Schema{}
-	// for {
+
 	if _type.Core == nil {
 		ut := findUseType(_type.Name, getCachedUseTypes())
 		if ut == nil && config.IsBaseType(_type.Name) {
@@ -593,8 +460,6 @@ func genObjRefSchema(_type rust.TypeParsed, defaultModPath []string) *spec.Schem
 
 		s = getUseTypeRefSchema(*ut)
 		s.Title = _type.Name
-		// return &ref
-		// TODO: 添加到里层 后 return
 	}
 
 	if _type.IsOption {
@@ -604,10 +469,8 @@ func genObjRefSchema(_type rust.TypeParsed, defaultModPath []string) *spec.Schem
 	}
 
 	if _type.IsArray {
-		// s := &spec.Schema{}
 		s.Items = &spec.SchemaOrArray{Schema: genObjRefSchema(*_type.Core, defaultModPath)}
-		// return s
 	}
 	return &s
-	// }
+
 }

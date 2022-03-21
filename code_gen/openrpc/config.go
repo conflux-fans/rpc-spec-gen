@@ -15,7 +15,6 @@ const (
 )
 
 func getSchemaSaveRelativePath(space string, schemaFullName string) string {
-	// return path.Join(strings.Join(useType.ModPath, "/"), useType.Name+".json")
 	return path.Join(space, strings.Join(strings.Split(schemaFullName, "::"), "/")+".json")
 }
 
@@ -25,11 +24,10 @@ func getSchemaSavePath(space string, schemaFullName string) string {
 
 func getUseTypeRefSchema(useType rust.UseType) spec.Schema {
 	s := spec.Schema{}
-	// schemaName := strings.ReplaceAll(getSchemaSaveRelativePath(useType), "/", "_")
 
 	// TODO: 如果ModdPath为空，则直接使用useType.Name
-
 	schemaName := strings.Join(useType.ModPath, "__") + "__" + useType.Name
+	schemaName = strings.TrimPrefix(schemaName, "__")
 	s.Ref = spec.MustCreateRef(schemaRefRoot + schemaName)
 	return s
 }
