@@ -13,9 +13,11 @@ import (
 )
 
 var config = struct {
-	RustRootPath string
+	RustRootPath  string
+	TraitRootPath string
 }{
-	RustRootPath: "/Users/wangdayong/myspace/mywork/conflux-rust",
+	RustRootPath:  "/Users/wangdayong/myspace/mywork/conflux-rust/",
+	TraitRootPath: "client/src/rpc/traits/",
 }
 
 var logger = &logrus.Logger{
@@ -33,9 +35,9 @@ var logger = &logrus.Logger{
 // V 解析出字段类型
 // V 生成 open rpc 方法描述文件
 func main() {
-	traitsFile := "/Users/wangdayong/myspace/mywork/conflux-rust/client/src/rpc/traits/cfx_space/pos.rs"
+	traitsFile := "/Users/wangdayong/myspace/mywork/conflux-rust/client/src/rpc/traits/cfx_space/cfx_clean.rs"
 
-	space := path.Join(traitsFile, "..")[len("/Users/wangdayong/myspace/mywork/conflux-rust/client/src/rpc/traits/"):]
+	space := path.Join(traitsFile, "..")[len(config.RustRootPath+config.TraitRootPath):]
 
 	traits, _ := ioutil.ReadFile(traitsFile)
 	parsed := rust.TraitsFile(traits).Parse()

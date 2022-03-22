@@ -10,7 +10,6 @@ import (
 
 	"github.com/Conflux-Chain/rpc-gen/config"
 	"github.com/Conflux-Chain/rpc-gen/parser/rust"
-	"github.com/Conflux-Chain/rpc-gen/utils"
 	"github.com/go-openapi/spec"
 	"github.com/sirupsen/logrus"
 	prefixed "github.com/x-cray/logrus-prefixed-formatter"
@@ -39,7 +38,7 @@ func init() {
 func GenSchemaByStruct(structParsed rust.StructParsed, defaultModPath []string,
 	structsInSameFile map[string]rust.Struct) spec.Schema {
 
-	logger.WithField("struct parsed", utils.MustJsonPretty(structParsed)).Info("GenSchemaByStruct")
+	// logger.WithField("struct parsed", utils.MustJsonPretty(structParsed)).Info("GenSchemaByStruct")
 
 	if structParsed.Name == "LedgerInfoWithV0" {
 		time.Sleep(0)
@@ -218,9 +217,10 @@ func GenMethod(funcParsed rust.FuncParsed, useTypes []rust.UseType) *Method {
 
 	if ut == nil {
 		logger.WithFields(logrus.Fields{
-			"Name":      funcParsed.Return.Type.Name,
-			"Use Types": useTypes,
-		}).Error("not found use type")
+			"Func Method": funcParsed.RpcMethod,
+			"Name":        funcParsed.Return.Type.Name,
+			"Use Types":   useTypes,
+		}).Panic("not found use type")
 	}
 
 	method.Result = &ContentDescriptor{
@@ -292,10 +292,17 @@ func getUseType(name string, defaultModPath []string, useTypes []rust.UseType) *
 }
 
 func findUseType(name string, useTypes []rust.UseType) *rust.UseType {
+
 	for _, useType := range useTypes {
-		if useType.Name == name {
+		// if useType.Name == name {
+		if useType.Alias == name {
 			return &useType
 		}
+	}
+
+	if rust.IsBaseType(name) {
+		ut := rust.MustNewUseType(name)
+		return &ut
 	}
 	return nil
 }
@@ -430,7 +437,7 @@ func findFieldUseType(aim rust.UseType, fCoreType string, usePool []rust.Use, en
 		"field core type": fCoreType,
 		"use pool":        usePool,
 		"enums pool":      enumsPool,
-	}).Panic("not find useType")
+	}).Panic("not find field useType")
 
 	return nil
 }

@@ -176,7 +176,7 @@ func getDocAllSchemas(doc OpenRPCSpec1, space string) []*spec.Schema {
 
 func mustLoadSchema(space string, useType rust.UseType) *spec.Schema {
 
-	if rust.IsBaseType(useType.String()) {
+	if useType.IsBaseType() {
 		return mustGetBasetypeSchemasByUseType(useType)
 	}
 

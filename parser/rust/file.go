@@ -8,6 +8,8 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// TODO: 移除注释掉的函数，如 cfx.rs最后的几个注释掉的函数
+
 func FindStruct(content string, structName string) (Struct, []Use) {
 	var re = regexp2.MustCompile(fmt.Sprintf(`\/\/\/(?:.(?!\/\/\/))+pub struct %v {.*?}|pub struct %v {.*?}`, structName, structName), regexp2.Multiline|regexp2.Singleline)
 	matched, e := re.FindStringMatch(content)
@@ -62,7 +64,8 @@ func GetStructs(content string) (map[string]Struct, []Use) {
 }
 
 func GetEnums(content string) (map[string]Enum, []Use) {
-	var re = regexp2.MustCompile(`\/\/\/(?:.(?!\/\/\/))+pub enum ([^\{]*) \{.*?}|pub enum ([^\{]*) \{.*?}`, regexp2.Multiline|regexp2.Singleline)
+	// var re = regexp2.MustCompile(`\/\/\/(?:.(?!\/\/\/))+pub enum ([^\{]*) \{.*?}|pub enum ([^\{]*) \{.*?}`, regexp2.Multiline|regexp2.Singleline)
+	var re = regexp2.MustCompile(`\/\/\/[^{}]+pub enum ([^\{]*) \{.*?}|pub enum ([^\{]*) \{.*?}`, regexp2.Multiline|regexp2.Singleline)
 	es, uses := getStructsOrEnums(content, re)
 	enums := make(map[string]Enum)
 	for k, v := range es {

@@ -59,6 +59,15 @@ func (r UseType) String() string {
 	return fmt.Sprintf("%s::%s", modPath, r.Name)
 }
 
+func (r UseType) ModPathString() string {
+	modPath := strings.Join(r.ModPath, "::")
+	return modPath
+}
+
+func (r UseType) IsBaseType() bool {
+	return IsBaseType(r.Name)
+}
+
 func (r *Use) body() useBody {
 	useReg := regexp.MustCompile(`(?mUs)use (.*);`)
 	useFinded := useReg.FindStringSubmatch(string(*r))
@@ -155,22 +164,31 @@ func (u *useNode) flatten() []string {
 }
 
 func (ui useItem) Parse() UseType {
-	nospaces := regexp.MustCompile(`\s+`).ReplaceAllString(string(ui), "")
-	parts := strings.Split(nospaces, "::")
+	// nospaces := regexp.MustCompile(`\s+`).ReplaceAllString(string(ui), "")
+
+	parts := strings.Split(string(ui), "::")
 	last := parts[len(parts)-1]
+
+	modPath := func() []string {
+		modPath := make([]string, len(parts)-1)
+		for i := 0; i < len(parts)-1; i++ {
+			modPath[i] = strings.TrimSpace(parts[i])
+		}
+		return modPath
+	}()
 
 	//jsonrpc_core::Result as JsonRpcResult
 	finds := re_ALIAS.FindStringSubmatch(last)
 	if len(finds) > 0 {
 		return UseType{
-			ModPath: parts[0 : len(parts)-1],
+			ModPath: modPath,
 			Name:    strings.TrimSpace(finds[1]),
 			Alias:   strings.TrimSpace(finds[2]),
 		}
 	}
 
 	return UseType{
-		ModPath: parts[0 : len(parts)-1],
+		ModPath: modPath,
 		Name:    strings.TrimSpace(last),
 		Alias:   strings.TrimSpace(last),
 	}
