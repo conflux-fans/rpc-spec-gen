@@ -5,7 +5,6 @@ import (
 	"io/ioutil"
 
 	"github.com/Conflux-Chain/rpc-gen/parser/rust"
-	"github.com/Conflux-Chain/rpc-gen/parser/rust/config"
 	"github.com/Conflux-Chain/rpc-gen/utils"
 	"github.com/go-openapi/spec"
 	"github.com/sirupsen/logrus"
@@ -49,7 +48,7 @@ func fillComponent(comp *Components, schema *spec.Schema, space string) {
 
 	useType := parseSchemaRefToUseType(schema.Ref.String())
 
-	meta, ok := config.GetUseTypeMeta(useType)
+	meta, ok := rust.GetUseTypeMeta(useType)
 	if !ok {
 		logger.WithFields(logrus.Fields{
 			"useType":    useType.String(),
@@ -177,7 +176,7 @@ func getDocAllSchemas(doc OpenRPCSpec1, space string) []*spec.Schema {
 
 func mustLoadSchema(space string, useType rust.UseType) *spec.Schema {
 
-	if config.IsBaseType(useType.String()) {
+	if rust.IsBaseType(useType.String()) {
 		return mustGetBasetypeSchemasByUseType(useType)
 	}
 

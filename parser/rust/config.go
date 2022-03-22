@@ -1,16 +1,15 @@
-package config
+package rust
 
 import (
 	"path"
 	"strings"
 
-	mainconfig "github.com/Conflux-Chain/rpc-gen/config"
-	"github.com/Conflux-Chain/rpc-gen/parser/rust"
+	"github.com/Conflux-Chain/rpc-gen/config"
 )
 
-type Config struct {
-	RustRootPath string
-}
+// type Config struct {
+// 	RustRootPath string
+// }
 type RustUseTypeMeta struct {
 	isBaseType bool
 	isIgnore   bool
@@ -26,7 +25,12 @@ func (r *RustUseTypeMeta) IsIgnore() bool {
 }
 
 func (r *RustUseTypeMeta) InFilePath() string {
-	return path.Join(mainconfig.GetConfig().RustRootPath, r.file)
+	return path.Join(config.GetConfig().RustRootPath, r.file)
+}
+
+var FolderPathOfMod = map[string]string{
+	"crate::rpc::types::pos": "client/src/rpc/types/pos/",
+	"diem_types":             "core/src/pos/types/src/",
 }
 
 // TODO: 加一个 mod path 到 file path 的映射, 如果 RustUseTypeMetas 中找不到，从 mode path 映射中遍历解析文件查找（只需要在init时解析一遍）
@@ -97,7 +101,7 @@ var RustUseTypeMetas map[string]RustUseTypeMeta = map[string]RustUseTypeMeta{
 	"crate::validator_verifier::ValidatorVerifier": {file: "core/src/pos/types/src/validator_verifier.rs"},
 }
 
-func GetUseTypeMeta(useType rust.UseType) (*RustUseTypeMeta, bool) {
+func GetUseTypeMeta(useType UseType) (*RustUseTypeMeta, bool) {
 	v, ok := RustUseTypeMetas[useType.String()]
 	return &v, ok
 }

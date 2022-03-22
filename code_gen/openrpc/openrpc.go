@@ -8,9 +8,8 @@ import (
 	"path"
 	"time"
 
-	gconfig "github.com/Conflux-Chain/rpc-gen/config"
+	"github.com/Conflux-Chain/rpc-gen/config"
 	"github.com/Conflux-Chain/rpc-gen/parser/rust"
-	"github.com/Conflux-Chain/rpc-gen/parser/rust/config"
 	"github.com/Conflux-Chain/rpc-gen/utils"
 	"github.com/go-openapi/spec"
 	"github.com/sirupsen/logrus"
@@ -106,7 +105,7 @@ func GenSchemas(useTypes []rust.UseType) map[string]spec.Schema {
 			continue
 		}
 
-		meta, ok := config.GetUseTypeMeta(useType)
+		meta, ok := rust.GetUseTypeMeta(useType)
 
 		if !ok {
 			panic(fmt.Sprintf("not found meta of %v", useType.String()))
@@ -254,13 +253,13 @@ func GenDocTempalte(trait rust.TraitParsed, useTypes []rust.UseType) OpenRPCSpec
 }
 
 func SaveDocTemplate(doc OpenRPCSpec1, space string) {
-	docPath := path.Join(gconfig.GetConfig().DocTemplateRootPath, space, doc.Info.Title+".json")
+	docPath := path.Join(config.GetConfig().DocTemplateRootPath, space, doc.Info.Title+".json")
 	j, _ := json.MarshalIndent(doc, "", " ")
 	saveFile(docPath, j)
 }
 
 func SaveDoc(doc OpenRPCSpec1, space string) {
-	docPath := path.Join(gconfig.GetConfig().DocRootPath, space, doc.Info.Title+".json")
+	docPath := path.Join(config.GetConfig().DocRootPath, space, doc.Info.Title+".json")
 	j, _ := json.MarshalIndent(doc, "", " ")
 	saveFile(docPath, j)
 }
@@ -283,7 +282,7 @@ func getUseType(name string, defaultModPath []string, useTypes []rust.UseType) *
 		}
 	}
 
-	if config.IsBaseType(name) {
+	if rust.IsBaseType(name) {
 		tmp := rust.MustNewUseType(name)
 		return &tmp
 	}
@@ -344,10 +343,10 @@ func getStructFieldUseTypes(aim rust.UseType, usePool []rust.Use, structsPool ma
 				logrus.Fields{
 					"aim":             aim,
 					"field core type": fCoreType,
-					"is base type":    config.IsBaseType(fCoreType),
+					"is base type":    rust.IsBaseType(fCoreType),
 				},
 			).Info("check is base type")
-			if config.IsBaseType(fCoreType) {
+			if rust.IsBaseType(fCoreType) {
 				continue
 			}
 
@@ -384,10 +383,10 @@ func getEnumFieldUseTypes(aim rust.UseType, usePool []rust.Use, enumsPool map[st
 					logrus.Fields{
 						"aim":             aim,
 						"field core type": fCoreType,
-						"is base type":    config.IsBaseType(fCoreType),
+						"is base type":    rust.IsBaseType(fCoreType),
 					},
 				).Info("check is base type")
-				if config.IsBaseType(fCoreType) {
+				if rust.IsBaseType(fCoreType) {
 					continue
 				}
 
@@ -451,7 +450,7 @@ func genObjRefSchema(_type rust.TypeParsed, defaultModPath []string) *spec.Schem
 
 	if _type.Core == nil {
 		ut := findUseType(_type.Name, getCachedUseTypes())
-		if ut == nil && config.IsBaseType(_type.Name) {
+		if ut == nil && rust.IsBaseType(_type.Name) {
 			tmp := rust.MustNewUseType(_type.Name)
 			ut = &tmp
 		}

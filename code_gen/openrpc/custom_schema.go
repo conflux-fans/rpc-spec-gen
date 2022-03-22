@@ -2,7 +2,6 @@ package openrpc
 
 import (
 	"github.com/Conflux-Chain/rpc-gen/parser/rust"
-	"github.com/Conflux-Chain/rpc-gen/parser/rust/config"
 	"github.com/go-openapi/spec"
 )
 
@@ -102,7 +101,7 @@ var customSchemas = map[string]*spec.Schema{
 }
 
 func mustGetBasetypeSchemasByUseType(useType rust.UseType) *spec.Schema {
-	meta, ok := config.GetUseTypeMeta(useType)
+	meta, ok := rust.GetUseTypeMeta(useType)
 	if !ok {
 		logger.Panicf("meta is nil for useType: %s", useType.String())
 	}
