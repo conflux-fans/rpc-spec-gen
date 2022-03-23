@@ -72,6 +72,7 @@ func GenSchemaByEnum(enumParsed rust.EnumParsed, defaultModPath []string,
 	s.Title = enumParsed.Comment
 	s.Properties = make(map[string]spec.Schema, len(enumParsed.Fields))
 
+	hasTumple := false
 	for _, field := range enumParsed.Fields {
 		// 是否tumple
 		// 如果是tumple，参数的ref生成步骤为：
@@ -80,6 +81,7 @@ func GenSchemaByEnum(enumParsed rust.EnumParsed, defaultModPath []string,
 		// 否则生成enum
 
 		if field.IsTumple() {
+			hasTumple = true
 			if len(field.TupleParams) > 1 {
 				logger.WithField("field", field).Panic("enum tumple field should be custom")
 			}
@@ -89,6 +91,15 @@ func GenSchemaByEnum(enumParsed rust.EnumParsed, defaultModPath []string,
 			continue
 		}
 		s.Enum = append(s.Enum, field.Value)
+	}
+
+	if hasTumple {
+		s.OneOf = append(s.OneOf, spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Enum: s.Enum,
+			},
+		})
+		s.Enum = nil
 	}
 
 	return s
@@ -196,73 +207,126 @@ func SaveSchemas(useTypes []rust.UseType, space string) {
 
 // - 方法的参数和返回值都是schema的ref，放到methods.params和methods.result
 // - 查看是否有已生成的scheme，没有则创建
-func GenMethod(funcParsed rust.FuncParsed, useTypes []rust.UseType) *Method {
+func GenMethod(funcParsed rust.FuncParsed, useTypePool []rust.UseType) *Method {
 	var method Method
 	method.Summary = funcParsed.Comment
 	method.Name = funcParsed.RpcMethod
 	method.Params = make([]*ContentDescriptor, len(funcParsed.Params))
 	for i, param := range funcParsed.Params {
-		ut := mustFindUseType(param.Type.Name, useTypes)
-
-		method.Params[i] = getParamContentDescriptor(*ut, param)
+		// ut := mustFindUseType(param.Type.InnestCoreTypeName(), useTypes)
+		// method.Params[i] = getParamContentDescriptor(*ut, param)
+		method.Params[i] = getParamContentDescriptor(param, useTypePool)
 	}
 
-	ut := findUseType(funcParsed.Return.Type.Name, useTypes)
+	// ut := findUseType(funcParsed.Return.Type.InnestCoreTypeName(), useTypePool)
 
-	if ut == nil {
-		logger.WithFields(logrus.Fields{
-			"Func Method": funcParsed.RpcMethod,
-			"Name":        funcParsed.Return.Type.Name,
-			"Use Types":   useTypes,
-		}).Panic("not found use type")
-	}
+	// if ut == nil {
+	// 	logger.WithFields(logrus.Fields{
+	// 		"Func Method": funcParsed.RpcMethod,
+	// 		"Name":        funcParsed.Return.Type.Name,
+	// 		"Use Types":   useTypePool,
+	// 	}).Panic("not found use type")
+	// }
 
-	method.Result = getResultContentDescriptor(*ut, funcParsed.Return)
+	// method.Result = getResultContentDescriptor(*ut, funcParsed.Return)
+	method.Result = getResultContentDescriptor(funcParsed.Return, useTypePool)
 
 	return &method
 }
 
-func getParamContentDescriptor(u rust.UseType, p rust.ParamParsed) *ContentDescriptor {
+func getParamContentDescriptor(p rust.ParamParsed, useTypePool []rust.UseType) *ContentDescriptor {
 
-	refSchema := getUseTypeRefSchema(u)
+	u := mustFindUseType(p.Type.InnestCoreTypeName(), useTypePool)
+	refSchema := getUseTypeRefSchema(*u)
+
+	// c := Content{
+	// 	Name:   p.Name,
+	// 	Schema: spec.Schema{},
+	// }
+
+	// for {
+	// 	if p.Type.IsOption {
+	// 		c.Required = !p.Type.IsOption
+	// 		continue
+	// 	}
+
+	// 	if p.Type.IsArray {
+	// 		c.Schema.Type = spec.StringOrArray{"array"}
+	// 		c.Schema.Items = &spec.SchemaOrArray{Schema: &refSchema}
+	// 		continue
+	// 	}
+
+	// 	c.Schema = refSchema
+	// }
 
 	c := Content{
 		Name:     p.Name,
 		Required: !p.Type.IsOption,
-		Schema:   spec.Schema{},
-	}
-
-	if p.Type.IsArray {
-		c.Schema.Type = spec.StringOrArray{"array"}
-		c.Schema.Items = &spec.SchemaOrArray{Schema: &refSchema}
-	} else {
-		c.Schema = refSchema
+		Schema:   *genSchemaForParsedType(p.Type, refSchema),
 	}
 
 	return &ContentDescriptor{Content: c}
 }
 
-func getResultContentDescriptor(u rust.UseType, r rust.ReturnParsed) *ContentDescriptor {
-	refSchema := getUseTypeRefSchema(u)
+func getResultContentDescriptor(p rust.ReturnParsed, useTypePool []rust.UseType) *ContentDescriptor {
+	u := mustFindUseType(p.Type.InnestCoreTypeName(), useTypePool)
+	refSchema := getUseTypeRefSchema(*u)
 
 	c := Content{
-		Name:   r.Name,
-		Schema: spec.Schema{},
-	}
-
-	if r.Type.IsArray {
-		c.Schema.Type = spec.StringOrArray{"array"}
-		c.Schema.Items = &spec.SchemaOrArray{Schema: &refSchema}
-	} else {
-		c.Schema = refSchema
-	}
-
-	if r.Type.IsOption {
-		c.Schema.Nullable = true
+		Name:   p.Name,
+		Schema: *genSchemaForParsedType(p.Type, refSchema),
 	}
 
 	return &ContentDescriptor{Content: c}
+
+	// c := Content{
+	// 	Name:   r.Name,
+	// 	Schema: spec.Schema{},
+	// }
+
+	// if r.Type.IsArray {
+	// 	c.Schema.Type = spec.StringOrArray{"array"}
+	// 	c.Schema.Items = &spec.SchemaOrArray{Schema: &refSchema}
+	// } else {
+	// 	c.Schema = refSchema
+	// }
+
+	// if r.Type.IsOption {
+	// 	c.Schema.Nullable = true
+	// }
+
+	// return &ContentDescriptor{Content: c}
 }
+
+// func genSchemaForParsedType(t rust.TypeParsed, coreRefSchema spec.Schema) spec.Schema {
+// 	s := spec.Schema{}
+
+func genSchemaForParsedType(t rust.TypeParsed, coreRefSchema spec.Schema) *spec.Schema {
+	if t.Core == nil {
+		return &coreRefSchema
+	}
+
+	coreSchema := genSchemaForParsedType(*t.Core, coreRefSchema)
+	items := &spec.SchemaOrArray{Schema: coreSchema}
+	if t.IsOption {
+		s := coreSchema
+		s.Nullable = true
+		return s
+	}
+
+	if t.IsArray {
+		s := &spec.Schema{}
+		s.Type = spec.StringOrArray{"array"}
+		s.Items = items
+		return s
+	}
+	if t.IsVariadicValue {
+	}
+	return nil
+}
+
+// 	return s
+// }
 
 func GenMethods(traitParsed rust.TraitParsed, useTypes []rust.UseType) []*Method {
 	var methods []*Method

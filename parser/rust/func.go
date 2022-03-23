@@ -32,7 +32,7 @@ func (r Func) Parse() FuncParsed {
 	funcReg := regexp.MustCompile(`(?ims)(.*)?#\[rpc.*?"(.*)?"\)\].*?fn(.*)?\(\s*\&self,*(.*)?\)\s*->\s*.*?<(.*)>`)
 	funcFinded := funcReg.FindStringSubmatch(string(r))
 
-	// fmt.Printf("%#v\n", funcFinded[1:])
+	// Note: returns 是不包含最外围泛型的结果，如RpcResult<H256>，这里只取H256
 	comment, rpcMethod, funcName, params, returns := funcFinded[1], funcFinded[2], funcFinded[3], funcFinded[4], funcFinded[5]
 	fmt.Printf("comment %v\nmethod %v\nfuncName %v\nparams %v\nreturns %v\n", comment, rpcMethod, funcName, params, returns)
 

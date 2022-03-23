@@ -28,20 +28,24 @@ type FieldParsed struct {
 
 // TypeParsed reperesnts parse result of a Rust struct field type
 type TypeParsed struct {
-	IsOption bool
-	IsArray  bool
-	Name     string
-	Core     *TypeParsed
+	IsOption        bool
+	IsArray         bool
+	IsBoxFuture     bool
+	IsVariadicValue bool
+	Name            string
+	Core            *TypeParsed
 }
 
 func (t *TypeParsed) InnestCoreTypeName() string {
-	for {
-		if t.Core == nil {
-			return t.Name
-		} else {
-			t = t.Core
-		}
+	// for {
+	if t.Core == nil {
+		return t.Name
 	}
+	//  else {
+	// t = t.Core
+	return t.Core.InnestCoreTypeName()
+	// }
+	// }
 }
 
 func (r Struct) Parse() StructParsed {
@@ -80,29 +84,61 @@ func (r Struct) Parse() StructParsed {
 
 func (r RustType) Parse() (result TypeParsed) {
 
-	optionReg := regexp.MustCompile(`Option<(.*)>`)
-	optionMatched := optionReg.FindStringSubmatch(string(r))
-
-	// fmt.Printf("optionMatched %#v\n", optionMatched)
-	if len(optionMatched) > 0 {
-		result.IsOption = true
-		result.Name = optionMatched[1]
-		coreParsed := RustType(result.Name).Parse()
-		result.Core = &coreParsed
-		return result
+	inner, e := re_AngleBrackets.FindStringMatch(string(r))
+	if e != nil {
+		logger.WithField("rustType", r).WithError(e).Panic("failed to found inner type")
 	}
+	// logger.WithField("rustType", r).WithField("inner", inner).Debug("find inner")
 
-	vecReg := regexp.MustCompile(`Vec<(.*)>`)
-	vecMatched := vecReg.FindStringSubmatch(string(r))
-	// fmt.Printf("vecMatched %#v\n", vecMatched)
-	if len(vecMatched) > 0 {
-		result.IsArray = true
-		result.Name = vecMatched[1]
-		coreParsed := RustType(result.Name).Parse()
-		result.Core = &coreParsed
-		return result
+	if inner == nil {
+		result.Name = string(r)
+		return
 	}
 
 	result.Name = string(r)
-	return result
+
+	trimedInner := strings.TrimPrefix(inner.String(), "<")
+	trimedInner = strings.TrimSuffix(trimedInner, ">")
+	coreParsed := RustType(trimedInner).Parse()
+	result.Core = &coreParsed
+
+	genericType := strings.TrimSuffix(string(r), inner.String())
+	switch genericType {
+	case "Option":
+		result.IsOption = true
+	case "Vec":
+		result.IsArray = true
+	case "BoxFuture":
+		result.IsBoxFuture = true
+	case "VariadicValue":
+		result.IsVariadicValue = true
+	}
+
+	return
+
+	// optionReg := regexp.MustCompile(`Option<(.*)>`)
+	// optionMatched := optionReg.FindStringSubmatch(string(r))
+
+	// // fmt.Printf("optionMatched %#v\n", optionMatched)
+	// if len(optionMatched) > 0 {
+	// 	result.IsOption = true
+	// 	result.Name = optionMatched[1]
+	// 	coreParsed := RustType(result.Name).Parse()
+	// 	result.Core = &coreParsed
+	// 	return result
+	// }
+
+	// vecReg := regexp.MustCompile(`Vec<(.*)>`)
+	// vecMatched := vecReg.FindStringSubmatch(string(r))
+	// // fmt.Printf("vecMatched %#v\n", vecMatched)
+	// if len(vecMatched) > 0 {
+	// 	result.IsArray = true
+	// 	result.Name = vecMatched[1]
+	// 	coreParsed := RustType(result.Name).Parse()
+	// 	result.Core = &coreParsed
+	// 	return result
+	// }
+
+	// result.Name = string(r)
+	// return result
 }

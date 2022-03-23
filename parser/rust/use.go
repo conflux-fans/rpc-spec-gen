@@ -25,8 +25,11 @@ type useNode struct {
 }
 
 var (
-	re_PAIR  = regexp2.MustCompile(`\{(?>[^{}]+|\{(?<DEPTH>)|\}(?<-DEPTH>))*(?(DEPTH)(?!))\}`, regexp2.Multiline)
-	re_ALIAS = regexp.MustCompile(`(.*) as (.*)`)
+	// 匹配最外层大括号
+	re_Braces = regexp2.MustCompile(`\{(?>[^{}]+|\{(?<DEPTH>)|\}(?<-DEPTH>))*(?(DEPTH)(?!))\}`, regexp2.Multiline)
+	// 匹配最外层尖括号，且以>结尾
+	re_AngleBrackets = regexp2.MustCompile(`<(?>[^<>]+|<(?<DEPTH>)|>(?<-DEPTH>))*(?(DEPTH)(?!))>$`, regexp2.Multiline)
+	re_ALIAS         = regexp.MustCompile(`(.*) as (.*)`)
 )
 
 func MustNewUseType(usetype string) UseType {
@@ -85,7 +88,7 @@ func (b *useBody) toNodes() []useNode {
 	}
 
 	matches := []string{}
-	m, e := re_PAIR.FindStringMatch(str)
+	m, e := re_Braces.FindStringMatch(str)
 	if e != nil {
 		panic(e)
 	}
@@ -103,7 +106,7 @@ func (b *useBody) toNodes() []useNode {
 
 	matches = append(matches, m.String())
 	for m != nil {
-		m, e = re_PAIR.FindNextMatch(m)
+		m, e = re_Braces.FindNextMatch(m)
 		if e != nil {
 			panic(e)
 		}
@@ -114,7 +117,7 @@ func (b *useBody) toNodes() []useNode {
 	}
 	// fmt.Printf("matches %#v\n", matches)
 
-	replaced, e := re_PAIR.Replace(str, "###", -1, -1)
+	replaced, e := re_Braces.Replace(str, "###", -1, -1)
 	if e != nil {
 		panic(e)
 	}

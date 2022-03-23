@@ -9,3 +9,17 @@
 9. RewardInfo schema 定义有问题
 10. transaction 没有 space 字段
 11. TransactionStatus schema 定义
+
+
+
+Option<Vec<U256>>
+
+require: true
+items: u256
+
+Vec<Option<U256>>
+
+items: {
+    type: u256
+    nullable: true
+}

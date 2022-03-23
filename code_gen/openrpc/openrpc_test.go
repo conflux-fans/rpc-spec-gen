@@ -6,6 +6,8 @@ import (
 	"testing"
 
 	"github.com/Conflux-Chain/rpc-gen/parser/rust"
+	"github.com/Conflux-Chain/rpc-gen/utils"
+	"github.com/go-openapi/spec"
 )
 
 func TestGenSchemas(t *testing.T) {
@@ -49,4 +51,18 @@ func TestGenObjRefSchema(t *testing.T) {
 	s := genObjRefSchema(_type, nil)
 	j, _ := json.MarshalIndent(s, "", "  ")
 	fmt.Printf("s %s\n", j)
+}
+
+func TestGenSchemaForParsedType(t *testing.T) {
+	refSchema := spec.Schema{
+		SchemaProps: spec.SchemaProps{
+			Ref: spec.MustCreateRef("#/components/schemas/U64"),
+		},
+	}
+
+	rustTypeParsed := rust.RustType("Option<Vec<U64>>").Parse()
+	rustTypeParsed = rust.RustType("Vec<Option<U64>>").Parse()
+
+	s := genSchemaForParsedType(rustTypeParsed, refSchema)
+	fmt.Printf("s %+v\n", utils.MustJsonPretty(s))
 }

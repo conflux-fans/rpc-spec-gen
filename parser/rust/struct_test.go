@@ -58,9 +58,20 @@ pub struct LedgerInfoWithV0 {
 }
 
 func TestParseFieldType(t *testing.T) {
-	var fieldType RustType = `Option<Vec<U256>>`
-	parsed := fieldType.Parse()
+	fieldType := []RustType{
+		`U256`,
+		`Option<Vec<U256>>`,
+		`Vec<Option<U256>>`,
+		`BoxFuture<Vec<RpcLog>>`,
+	}
+
+	parsed := fieldType[3].Parse()
 
 	b, _ := json.MarshalIndent(parsed, "", "  ")
 	fmt.Printf("%s\n", b)
+}
+
+func TestJsonMarshal(t *testing.T) {
+	j, _ := json.Marshal("<>")
+	fmt.Printf("%s\n", j)
 }
