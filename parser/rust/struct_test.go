@@ -55,6 +55,75 @@ pub struct LedgerInfoWithV0 {
 
 	b, _ = json.MarshalIndent(parsed, "", "  ")
 	fmt.Printf("%s\n", b)
+
+	rustStruct = `
+	#[derive(PartialEq, Debug, Serialize, Deserialize, Eq, Hash, Clone)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct CfxRpcLogFilter {
+    /// Search will be applied from this epoch number.
+    pub from_epoch: Option<EpochNumber>,
+
+    /// Till this epoch number.
+    pub to_epoch: Option<EpochNumber>,
+
+    /// Search will be applied from this block number.
+    pub from_block: Option<U64>,
+
+    /// Till this block number.
+    pub to_block: Option<U64>,
+
+    /// Search will be applied in these blocks if given.
+    /// This will override from/to_epoch fields.
+    pub block_hashes: Option<Vec<H256>>,
+
+    /// Search addresses.
+    ///
+    /// If None, match all.
+    /// If specified, log must be produced by one of these addresses.
+    pub address: Option<VariadicValue<RpcAddress>>,
+
+    /// Search topics.
+    ///
+    /// Logs can have 4 topics: the function signature and up to 3 indexed
+    /// event arguments. The elements of topics match the corresponding
+    /// log topics. Example: ["0xA", null, ["0xB", "0xC"], null] matches
+    /// logs with "0xA" as the 1st topic AND ("0xB" OR "0xC") as the 3rd
+    /// topic. If None, match all.
+    pub topics: Option<Vec<VariadicValue<H256>>>,
+
+    /// Logs offset
+    ///
+    /// If None, return all logs
+    /// If specified, should skip the *last* n logs.
+    pub offset: Option<U64>,
+
+    /// Logs limit
+    ///
+    /// If None, return all logs
+    /// If specified, should only return *last* n logs
+    /// after the offset has been applied.
+    pub limit: Option<U64>,
+}`
+	parsed = rustStruct.Parse()
+
+	b, _ = json.MarshalIndent(parsed, "", "  ")
+	fmt.Printf("%s\n", b)
+
+	rustStruct = `
+#[derive(Debug, Serialize, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RewardInfo {
+    block_hash: H256,
+    author: RpcAddress,
+    total_reward: U256,
+    base_reward: U256,
+    tx_fee: U256,
+}
+	`
+	parsed = rustStruct.Parse()
+
+	b, _ = json.MarshalIndent(parsed, "", "  ")
+	fmt.Printf("%s\n", b)
 }
 
 func TestParseFieldType(t *testing.T) {

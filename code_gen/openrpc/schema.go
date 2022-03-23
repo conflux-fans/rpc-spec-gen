@@ -138,24 +138,25 @@ var basetypeSchemas = map[string]*spec.Schema{
 // 	]
 // }
 var customSchemas = map[string]*spec.Schema{
-	"BlockNumber": {
-		SchemaProps: spec.SchemaProps{
-			OneOf: []spec.Schema{
-				{
-					SchemaProps: spec.SchemaProps{
-						Title: "Block number",
-						Ref:   spec.MustCreateRef(schemaRefRoot + "U64"),
-					},
-				},
-				{
-					SchemaProps: spec.SchemaProps{
-						Title: "Block tag",
-						Enum:  []interface{}{"earliest", "latest_committed", "latest_voted"},
-					},
-				},
-			},
-		},
-	},
+	// "BlockNumber": {
+	// 	SchemaProps: spec.SchemaProps{
+	// 		OneOf: []spec.Schema{
+	// 			{
+	// 				SchemaProps: spec.SchemaProps{
+	// 					Title: "Block number",
+	// 					Ref:   spec.MustCreateRef(schemaRefRoot + "U64"),
+	// 				},
+	// 			},
+	// 			{
+	// 				SchemaProps: spec.SchemaProps{
+	// 					Title: "Block tag",
+	// 					Enum:  []interface{}{"earliest", "latest_committed", "latest_voted"},
+	// 				},
+	// 			},
+	// 		},
+	// 	},
+	// },
+	// "EpochNumber": {},
 
 	// // FIXME: 1. fix pattern, 2. basetypeschem 和 customSchemas 中只需要留一个
 	// "VariadicValue%3CRpcAddress%3E": {

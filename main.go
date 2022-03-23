@@ -35,7 +35,7 @@ var logger = &logrus.Logger{
 // V 解析出字段类型
 // V 生成 open rpc 方法描述文件
 func main() {
-	traitsFile := "/Users/wangdayong/myspace/mywork/conflux-rust/client/src/rpc/traits/cfx_space/cfx_test.rs"
+	traitsFile := "/Users/wangdayong/myspace/mywork/conflux-rust/client/src/rpc/traits/cfx_space/cfx_clean.rs1"
 
 	space := path.Join(traitsFile, "..")[len(config.RustRootPath+config.TraitRootPath):]
 

@@ -10,6 +10,7 @@ import (
 
 	"github.com/Conflux-Chain/rpc-gen/config"
 	"github.com/Conflux-Chain/rpc-gen/parser/rust"
+	"github.com/Conflux-Chain/rpc-gen/utils"
 	"github.com/go-openapi/spec"
 	"github.com/sirupsen/logrus"
 	prefixed "github.com/x-cray/logrus-prefixed-formatter"
@@ -40,7 +41,7 @@ func GenSchemaByStruct(structParsed rust.StructParsed, defaultModPath []string,
 
 	// logger.WithField("struct parsed", utils.MustJsonPretty(structParsed)).Info("GenSchemaByStruct")
 
-	if structParsed.Name == "LedgerInfoWithV0" {
+	if structParsed.Name == "CfxRpcLogFilter" {
 		time.Sleep(0)
 	}
 
@@ -54,8 +55,11 @@ func GenSchemaByStruct(structParsed rust.StructParsed, defaultModPath []string,
 		// 	先从 usetype2Schema , basetypes 匹配
 		// 	若都未匹配到则设置为与struct同级别usetype
 		refSchema := genObjRefSchema(field.Type, defaultModPath)
-		refSchema.Title = field.Name
-		s.Properties[field.Name] = *refSchema
+
+		fNameCamleCase := utils.UnderScoreCase2CamelCase(field.Name, false)
+		refSchema.Title = fNameCamleCase
+
+		s.Properties[fNameCamleCase] = *refSchema
 	}
 
 	return s
@@ -73,6 +77,7 @@ func GenSchemaByEnum(enumParsed rust.EnumParsed, defaultModPath []string,
 	s.Properties = make(map[string]spec.Schema, len(enumParsed.Fields))
 
 	hasTumple := false
+	enums := make([]interface{}, 0)
 	for _, field := range enumParsed.Fields {
 		// 是否tumple
 		// 如果是tumple，参数的ref生成步骤为：
@@ -90,18 +95,20 @@ func GenSchemaByEnum(enumParsed rust.EnumParsed, defaultModPath []string,
 			s.OneOf = append(s.OneOf, *refSchema)
 			continue
 		}
-		s.Enum = append(s.Enum, field.Value)
+		underScoreCase := utils.CamelCase2UnderScoreCase(field.Value)
+		enums = append(enums, underScoreCase)
 	}
 
-	if hasTumple {
-		s.OneOf = append(s.OneOf, spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Enum: s.Enum,
-			},
-		})
-		s.Enum = nil
+	if !hasTumple {
+		s.Enum = enums
+		return s
 	}
 
+	s.OneOf = append(s.OneOf, spec.Schema{
+		SchemaProps: spec.SchemaProps{
+			Enum: enums,
+		},
+	})
 	return s
 }
 
@@ -532,6 +539,7 @@ func findFieldUseType(aim rust.UseType, fCoreType string, usePool []rust.Use, en
 		"field core type": fCoreType,
 		"use pool":        usePool,
 		"enums pool":      enumsPool,
+		"structs pool":    structsPool,
 	}).Panic("not find field useType")
 
 	return nil
