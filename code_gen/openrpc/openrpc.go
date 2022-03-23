@@ -204,13 +204,7 @@ func GenMethod(funcParsed rust.FuncParsed, useTypes []rust.UseType) *Method {
 	for i, param := range funcParsed.Params {
 		ut := mustFindUseType(param.Type.Name, useTypes)
 
-		method.Params[i] = &ContentDescriptor{
-			Content: Content{
-				Name:     param.Name,
-				Required: !param.Type.IsOption,
-				Schema:   getUseTypeRefSchema(*ut),
-			},
-		}
+		method.Params[i] = getParamContentDescriptor(*ut, param)
 	}
 
 	ut := findUseType(funcParsed.Return.Type.Name, useTypes)
@@ -223,13 +217,51 @@ func GenMethod(funcParsed rust.FuncParsed, useTypes []rust.UseType) *Method {
 		}).Panic("not found use type")
 	}
 
-	method.Result = &ContentDescriptor{
-		Content: Content{
-			Name:   funcParsed.Return.Name,
-			Schema: getUseTypeRefSchema(*ut),
-		},
-	}
+	method.Result = getResultContentDescriptor(*ut, funcParsed.Return)
+
 	return &method
+}
+
+func getParamContentDescriptor(u rust.UseType, p rust.ParamParsed) *ContentDescriptor {
+
+	refSchema := getUseTypeRefSchema(u)
+
+	c := Content{
+		Name:     p.Name,
+		Required: !p.Type.IsOption,
+		Schema:   spec.Schema{},
+	}
+
+	if p.Type.IsArray {
+		c.Schema.Type = spec.StringOrArray{"array"}
+		c.Schema.Items = &spec.SchemaOrArray{Schema: &refSchema}
+	} else {
+		c.Schema = refSchema
+	}
+
+	return &ContentDescriptor{Content: c}
+}
+
+func getResultContentDescriptor(u rust.UseType, r rust.ReturnParsed) *ContentDescriptor {
+	refSchema := getUseTypeRefSchema(u)
+
+	c := Content{
+		Name:   r.Name,
+		Schema: spec.Schema{},
+	}
+
+	if r.Type.IsArray {
+		c.Schema.Type = spec.StringOrArray{"array"}
+		c.Schema.Items = &spec.SchemaOrArray{Schema: &refSchema}
+	} else {
+		c.Schema = refSchema
+	}
+
+	if r.Type.IsOption {
+		c.Schema.Nullable = true
+	}
+
+	return &ContentDescriptor{Content: c}
 }
 
 func GenMethods(traitParsed rust.TraitParsed, useTypes []rust.UseType) []*Method {
@@ -313,8 +345,7 @@ func mustFindUseType(name string, useTypes []rust.UseType) *rust.UseType {
 		logger.WithFields(logrus.Fields{
 			"Name":      name,
 			"Use Types": useTypes,
-		}).Error("not found use type")
-		panic("not found useType")
+		}).Panic("not found use type")
 	}
 	return ut
 }

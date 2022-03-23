@@ -53,7 +53,7 @@ type Method struct {
 	Summary        string               `json:"summary,omitempty"`
 	Description    string               `json:"description,omitempty"`
 	ExternalDocs   *ExternalDocs        `json:"externalDocs,omitempty"`
-	Params         []*ContentDescriptor `json:"params,omitempty"`
+	Params         []*ContentDescriptor `json:"params"`
 	Result         *ContentDescriptor   `json:"result,omitempty"`
 	Deprecated     bool                 `json:"deprecated,omitempty"`
 	Servers        []Server             `json:"servers,omitempty"`
