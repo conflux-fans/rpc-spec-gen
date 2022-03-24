@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Conflux-Chain/rpc-gen/utils"
+	"github.com/Conflux-Chain/jsonrpc-spec/tools/spec-gen/utils"
 	"github.com/dlclark/regexp2"
 )
 
