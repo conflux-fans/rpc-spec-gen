@@ -1,4 +1,4 @@
-module github.com/Conflux-Chain/jsonrpc-spec/tools/spec-gen
+module github.com/Conflux-Chain/jsonrpc-spec/tools/rpc-spec-gen
 
 go 1.16
 

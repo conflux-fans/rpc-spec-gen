@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Conflux-Chain/jsonrpc-spec/tools/spec-gen/config"
-	"github.com/Conflux-Chain/jsonrpc-spec/tools/spec-gen/parser/rust"
+	"github.com/Conflux-Chain/jsonrpc-spec/tools/rpc-spec-gen/config"
+	"github.com/Conflux-Chain/jsonrpc-spec/tools/rpc-spec-gen/parser/rust"
 	"github.com/go-openapi/spec"
 )
 

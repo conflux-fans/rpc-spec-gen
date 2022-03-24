@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/Conflux-Chain/jsonrpc-spec/tools/spec-gen/parser/rust"
-	"github.com/Conflux-Chain/jsonrpc-spec/tools/spec-gen/utils"
+	"github.com/Conflux-Chain/jsonrpc-spec/tools/rpc-spec-gen/parser/rust"
+	"github.com/Conflux-Chain/jsonrpc-spec/tools/rpc-spec-gen/utils"
 	"github.com/go-openapi/spec"
 )
 
