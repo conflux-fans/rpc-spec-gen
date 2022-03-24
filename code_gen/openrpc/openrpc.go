@@ -8,9 +8,9 @@ import (
 	"path"
 	"time"
 
-	"github.com/Conflux-Chain/jsonrpc-spec/tools/rpc-spec-gen/config"
-	"github.com/Conflux-Chain/jsonrpc-spec/tools/rpc-spec-gen/parser/rust"
-	"github.com/Conflux-Chain/jsonrpc-spec/tools/rpc-spec-gen/utils"
+	"github.com/conflux-fans/rpc-spec-gen/config"
+	"github.com/conflux-fans/rpc-spec-gen/parser/rust"
+	"github.com/conflux-fans/rpc-spec-gen/utils"
 	"github.com/go-openapi/spec"
 	"github.com/sirupsen/logrus"
 	prefixed "github.com/x-cray/logrus-prefixed-formatter"

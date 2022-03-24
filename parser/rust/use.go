@@ -5,7 +5,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/Conflux-Chain/jsonrpc-spec/tools/rpc-spec-gen/utils"
+	"github.com/conflux-fans/rpc-spec-gen/utils"
 	"github.com/dlclark/regexp2"
 )
 

@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Conflux-Chain/jsonrpc-spec/tools/rpc-spec-gen/config"
+	"github.com/conflux-fans/rpc-spec-gen/config"
 )
 
 // type Config struct {

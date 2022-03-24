@@ -6,8 +6,8 @@ import (
 	"os"
 	"path"
 
-	"github.com/Conflux-Chain/jsonrpc-spec/tools/rpc-spec-gen/code_gen/openrpc"
-	"github.com/Conflux-Chain/jsonrpc-spec/tools/rpc-spec-gen/parser/rust"
+	"github.com/conflux-fans/rpc-spec-gen/code_gen/openrpc"
+	"github.com/conflux-fans/rpc-spec-gen/parser/rust"
 	"github.com/sirupsen/logrus"
 	prefixed "github.com/x-cray/logrus-prefixed-formatter"
 )
