@@ -1,10 +1,18 @@
 package openrpc
 
 import (
+	"path"
+	"regexp"
+	"strings"
 	"time"
 
+	"github.com/Conflux-Chain/rpc-gen/config"
 	"github.com/Conflux-Chain/rpc-gen/parser/rust"
 	"github.com/go-openapi/spec"
+)
+
+const (
+	schemaRefRoot = "#/components/schemas/"
 )
 
 var basetypeSchemas = map[string]*spec.Schema{
@@ -88,30 +96,16 @@ var basetypeSchemas = map[string]*spec.Schema{
 	"Address": {
 		SchemaProps: spec.SchemaProps{
 			Type:    spec.StringOrArray{"string"},
-			Pattern: `^(NET\d+|CFX|CFXTEST)(:TYPE\..*|):[ABCDEFGHJKMNPRSTUVWXYZ0123456789]42)$`,
+			Pattern: `^(NET\d+|CFX|CFXTEST)(:TYPE\..*|):[ABCDEFGHJKMNPRSTUVWXYZ0123456789]{42}$`,
 		},
 	},
-	"Account": {
-		SchemaProps: spec.SchemaProps{
-			Type:    spec.StringOrArray{"string"},
-			Pattern: `^(NET\d+|CFX|CFXTEST)(:TYPE\..*|):[ABCDEFGHJKMNPRSTUVWXYZ0123456789]42)$`,
-		},
-	},
+	// "Account": {
+	// 	SchemaProps: spec.SchemaProps{
+	// 		Type:    spec.StringOrArray{"string"},
+	// 		Pattern: `^(NET\d+|CFX|CFXTEST)(:TYPE\..*|):[ABCDEFGHJKMNPRSTUVWXYZ0123456789]42)$`,
+	// 	},
+	// },
 	"EpochNumber": {
-		SchemaProps: spec.SchemaProps{
-			Type:    spec.StringOrArray{"string"},
-			Pattern: "^.*$",
-		},
-	},
-
-	// FIXME: 1. fix pattern, 2. basetypeschem 和 customSchemas 中只需要留一个
-	"VariadicValue%3CH256%3E": {
-		SchemaProps: spec.SchemaProps{
-			Type:    spec.StringOrArray{"string"},
-			Pattern: "^.*$",
-		},
-	},
-	"VariadicValue%3CRpcAddress%3E": {
 		SchemaProps: spec.SchemaProps{
 			Type:    spec.StringOrArray{"string"},
 			Pattern: "^.*$",
@@ -119,24 +113,6 @@ var basetypeSchemas = map[string]*spec.Schema{
 	},
 }
 
-// "BlockTag": {
-// 	"title": "Block tag",
-// 	"type": "string",
-// 	"enum": ["earliest", "latest", "pending"]
-// },
-// "BlockNumberOrTag": {
-// 	"title": "Block number or tag",
-// 	"oneOf": [
-// 		{
-// 			"title": "Block number",
-// 			"$ref": "#/components/schemas/uint"
-// 		},
-// 		{
-// 			"title": "Block tag",
-// 			"$ref": "#/components/schemas/BlockTag"
-// 		}
-// 	]
-// }
 var customSchemas = map[string]*spec.Schema{
 	// "BlockNumber": {
 	// 	SchemaProps: spec.SchemaProps{
@@ -157,20 +133,6 @@ var customSchemas = map[string]*spec.Schema{
 	// 	},
 	// },
 	// "EpochNumber": {},
-
-	// // FIXME: 1. fix pattern, 2. basetypeschem 和 customSchemas 中只需要留一个
-	// "VariadicValue%3CRpcAddress%3E": {
-	// 	SchemaProps: spec.SchemaProps{
-	// 		Type:    spec.StringOrArray{"string"},
-	// 		Pattern: "^.*$",
-	// 	},
-	// },
-	// "VariadicValue%3CH256%3E": {
-	// 	SchemaProps: spec.SchemaProps{
-	// 		Type:    spec.StringOrArray{"string"},
-	// 		Pattern: "^.*$",
-	// 	},
-	// },
 }
 
 func mustGetBasetypeSchemasByUseType(useType rust.UseType) *spec.Schema {
@@ -191,4 +153,41 @@ func mustGetBasetypeSchemasByUseType(useType rust.UseType) *spec.Schema {
 	}
 	logger.Panicf("useType is not basetype: %s, alias %v", useType.String(), useType.Alias)
 	return nil
+}
+
+func getSchemaSaveRelativePath(space string, schemaFullName string) string {
+	return path.Join(space, strings.Join(strings.Split(schemaFullName, "::"), "/")+".json")
+}
+
+func getSchemaSavePath(space string, schemaFullName string) string {
+	return path.Join(config.GetConfig().SchemaRootPath, getSchemaSaveRelativePath(space, schemaFullName))
+}
+
+func getUseTypeRefSchema(useType rust.UseType) spec.Schema {
+	s := spec.Schema{}
+
+	schemaName := strings.Join(useType.ModPath, "__") + "__" + useType.Name
+	schemaName = strings.TrimPrefix(schemaName, "__")
+	s.Ref = spec.MustCreateRef(schemaRefRoot + schemaName)
+	return s
+}
+
+func parseSchemaRefToUseType(ref string) rust.UseType {
+
+	fullUseType := strings.TrimPrefix(ref, schemaRefRoot)
+	matchs := regexp.MustCompile(`(.*)__(.*)`).FindStringSubmatch(fullUseType)
+
+	if len(matchs) != 3 {
+		logger.WithField("ref", ref).Debug("parse to a base type")
+		return rust.UseType{
+			Name: fullUseType,
+		}
+	}
+
+	fullName := matchs[1]
+
+	return rust.UseType{
+		ModPath: strings.Split(fullName, "__"),
+		Name:    matchs[2],
+	}
 }

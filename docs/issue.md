@@ -19,6 +19,7 @@ TODO:
 6. block.transaction type array
 7. 去掉trait中的前后注释
 
+
 Option<Vec<U256>>
 
 require: true

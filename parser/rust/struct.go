@@ -16,7 +16,9 @@ type RustType string
 type StructParsed struct {
 	Comment string
 	Name    string
-	Fields  []FieldParsed
+	// TODO: 还没有解析
+	IsDriveSerialize bool
+	Fields           []FieldParsed
 }
 
 // FieldParsed reperesnts parse result of a Rust struct field
@@ -79,7 +81,7 @@ func (r Struct) Parse() StructParsed {
 		}).Debug("field parsed")
 	}
 
-	return StructParsed{sComment, sName, fields}
+	return StructParsed{sComment, sName, false, fields}
 }
 
 func (r RustType) Parse() (result TypeParsed) {
