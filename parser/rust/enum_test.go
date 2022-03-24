@@ -19,6 +19,12 @@ pub enum BlockNumber {
 	LatestVoted,
 }`
 
+	e = `#[derive(Debug, PartialEq, Clone, Hash, Eq)]
+pub enum BlockHashOrEpochNumber {
+    BlockHash(H256),
+    EpochNumber(EpochNumber),
+}`
+
 	r := e.Parse()
 	j, _ := json.MarshalIndent(r, "", "  ")
 	fmt.Printf("%s\n", j)

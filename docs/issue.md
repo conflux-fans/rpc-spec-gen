@@ -10,7 +10,14 @@
 10. transaction 没有 space 字段
 11. TransactionStatus schema 定义
 
-
+TODO:
+1. VariadicValue Schema生成 （rpc logfilter topics）
+2. struct enum 根据是否实现了 Serialize 生成不同格式
+3. one of 多一个空schema (BlockHashOrEpochNumber) V
+4. 默认枚举camelcase
+5. param nullable 问题
+6. block.transaction type array
+7. 去掉trait中的前后注释
 
 Option<Vec<U256>>
 

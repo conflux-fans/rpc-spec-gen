@@ -36,8 +36,7 @@ func init() {
 	}
 }
 
-func GenSchemaByStruct(structParsed rust.StructParsed, defaultModPath []string,
-	structsInSameFile map[string]rust.Struct) spec.Schema {
+func GenSchemaByStruct(structParsed rust.StructParsed, defaultModPath []string) spec.Schema {
 
 	// logger.WithField("struct parsed", utils.MustJsonPretty(structParsed)).Info("GenSchemaByStruct")
 
@@ -65,8 +64,7 @@ func GenSchemaByStruct(structParsed rust.StructParsed, defaultModPath []string,
 	return s
 }
 
-func GenSchemaByEnum(enumParsed rust.EnumParsed, defaultModPath []string,
-	structsInSameFile map[string]rust.Enum) spec.Schema {
+func GenSchemaByEnum(enumParsed rust.EnumParsed, defaultModPath []string) spec.Schema {
 
 	if v, ok := usetype2Schema[enumParsed.Name]; ok {
 		return v
@@ -97,6 +95,10 @@ func GenSchemaByEnum(enumParsed rust.EnumParsed, defaultModPath []string,
 		}
 		underScoreCase := utils.CamelCase2UnderScoreCase(field.Value)
 		enums = append(enums, underScoreCase)
+	}
+
+	if len(enums) == 0 {
+		return s
 	}
 
 	if !hasTumple {
@@ -170,7 +172,7 @@ func GenSchemas(useTypes []rust.UseType) map[string]spec.Schema {
 			}).Debug("filter struct field using use types")
 			GenSchemas(fieldUsetypes)
 
-			usetype2Schema[useType.String()] = GenSchemaByStruct(_strcut.Parse(), useType.ModPath, structs)
+			usetype2Schema[useType.String()] = GenSchemaByStruct(_strcut.Parse(), useType.ModPath)
 			continue
 		}
 
@@ -182,7 +184,7 @@ func GenSchemas(useTypes []rust.UseType) map[string]spec.Schema {
 			}).Debug("filter struct field using use types")
 			GenSchemas(fieldUsetypes)
 
-			usetype2Schema[useType.String()] = GenSchemaByEnum(_enum.Parse(), useType.ModPath, enums)
+			usetype2Schema[useType.String()] = GenSchemaByEnum(_enum.Parse(), useType.ModPath)
 			continue
 		}
 

@@ -66,3 +66,15 @@ func TestGenSchemaForParsedType(t *testing.T) {
 	s := genSchemaForParsedType(rustTypeParsed, refSchema)
 	fmt.Printf("s %+v\n", utils.MustJsonPretty(s))
 }
+
+func TestGenSchemaByEnum(t *testing.T) {
+	var e rust.Enum = `#[derive(Debug, PartialEq, Clone, Hash, Eq)]
+	pub enum BlockHashOrEpochNumber {
+		BlockHash(H256),
+		EpochNumber(EpochNumber),
+	}`
+
+	r := e.Parse()
+	s := GenSchemaByEnum(r, nil)
+	fmt.Printf("s %+v\n", utils.MustJsonPretty(s))
+}
