@@ -18,16 +18,4 @@ TODO:
 5. param nullable 问题
 6. block.transaction type array
 7. 去掉trait中的前后注释
-
-
-Option<Vec<U256>>
-
-require: true
-items: u256
-
-Vec<Option<U256>>
-
-items: {
-    type: u256
-    nullable: true
-}
+8. 命令行化，支持输出保存路径

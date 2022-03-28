@@ -581,6 +581,7 @@ func genObjRefSchema(_type rust.TypeParsed, defaultModPath []string) *spec.Schem
 	}
 
 	if _type.IsArray {
+		s.Type = spec.StringOrArray{"array"}
 		s.Items = &spec.SchemaOrArray{Schema: genObjRefSchema(*_type.Core, defaultModPath)}
 	}
 	return &s
