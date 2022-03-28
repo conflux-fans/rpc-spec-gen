@@ -16,6 +16,6 @@ TODO:
 3. one of 多一个空schema (BlockHashOrEpochNumber) V
 4. 默认枚举camelcase
 5. param nullable 问题
-6. block.transaction type array
+6. block.transaction type array V
 7. 去掉trait中的前后注释
 8. 命令行化，支持输出保存路径

@@ -584,6 +584,17 @@ func genObjRefSchema(_type rust.TypeParsed, defaultModPath []string) *spec.Schem
 		s.Type = spec.StringOrArray{"array"}
 		s.Items = &spec.SchemaOrArray{Schema: genObjRefSchema(*_type.Core, defaultModPath)}
 	}
+
+	if _type.IsVariadicValue {
+		s.OneOf = append(s.OneOf, *genObjRefSchema(*_type.Core, defaultModPath))
+		s.OneOf = append(s.OneOf, spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Type:  spec.StringOrArray{"array"},
+				Items: &spec.SchemaOrArray{Schema: genObjRefSchema(*_type.Core, defaultModPath)},
+			},
+		})
+		s.Nullable = true
+	}
 	return &s
 
 }
