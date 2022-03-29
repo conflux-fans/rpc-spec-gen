@@ -380,7 +380,7 @@ impl From<KeptVMStatus> for RpcTransactionStatus {
 
 		`,
 	}
-	structs, us := GetStructs(str[1])
+	structs, us := SourceCode(str[1]).GetStructs()
 	for k, v := range structs {
 		fmt.Printf("struct k:%v, \nv:%v\n", k, v)
 	}
@@ -427,7 +427,7 @@ impl Default for Status {
 		}
 	}
 }`
-	enum, us := GetEnums(str)
+	enum, us := SourceCode(str).GetEnums()
 	for k, v := range enum {
 		fmt.Printf("enum k:%v, \nv:%v\n", k, v)
 	}

@@ -14,7 +14,7 @@ type TraitsFileParsed struct {
 
 func (tf TraitsFile) Parse() TraitsFileParsed {
 	resultM := traitsFileParsedMiddle{}
-	resultM.traits, resultM.uses = GetTraits(string(tf))
+	resultM.traits, resultM.uses = SourceCode(tf).GetTraits()
 	return resultM.parseCore()
 }
 

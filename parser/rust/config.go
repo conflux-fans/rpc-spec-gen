@@ -152,12 +152,14 @@ func GetUseTypeMeta(useType UseType) (*RustUseTypeMeta, bool) {
 			if strings.HasSuffix(file.Name(), ".rs") {
 				// 填充RustUseTypeMetas
 				filePath := path.Join(folderPath, file.Name())
-				content, err := ioutil.ReadFile(filePath)
+				_content, err := ioutil.ReadFile(filePath)
+				content := SourceCode(_content)
 				if err != nil {
 					logger.WithField("filePath", filePath).WithError(err).Panic("read file error")
 				}
-				structs, _ := GetStructs(string(content))
-				enums, _ := GetEnums(string(content))
+				structs, _ := content.GetStructs()
+				enums, _ := content.GetEnums()
+				defineTypes, _ := content.GetDefineTypes()
 				for s := range structs {
 					sUsetype := UseType{useType.ModPath, s, s}
 					meta := RustUseTypeMeta{
@@ -171,6 +173,13 @@ func GetUseTypeMeta(useType UseType) (*RustUseTypeMeta, bool) {
 						file: strings.TrimPrefix(filePath, config.GetConfig().RustRootPath),
 					}
 					addTypeMetaIfNotExist(eUsetype, meta)
+				}
+				for d := range defineTypes {
+					dUsetype := UseType{useType.ModPath, d, d}
+					meta := RustUseTypeMeta{
+						file: strings.TrimPrefix(filePath, config.GetConfig().RustRootPath),
+					}
+					addTypeMetaIfNotExist(dUsetype, meta)
 				}
 			}
 		}

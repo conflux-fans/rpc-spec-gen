@@ -114,6 +114,11 @@ func GenSchemaByEnum(enumParsed rust.EnumParsed, defaultModPath []string) spec.S
 	return s
 }
 
+func GenSchemaByDefineType(defineType rust.RustType, defaultModPath []string) spec.Schema {
+	typeParsed := defineType.Parse()
+	return *genObjRefSchema(typeParsed, defaultModPath)
+}
+
 func GenSchemas(useTypes []rust.UseType) map[string]spec.Schema {
 
 	logger.WithField("useTypes", useTypes).Debug("GenSchemas")
@@ -142,7 +147,7 @@ func GenSchemas(useTypes []rust.UseType) map[string]spec.Schema {
 		// 判断enums中是否有该类型，有则生成schema
 		//     先生成子项的schema
 		//     再生成该enum的schema
-		code, e := ioutil.ReadFile(meta.InFilePath())
+		_code, e := ioutil.ReadFile(meta.InFilePath())
 		if e != nil {
 			logrus.
 				WithField("useType", useType).
@@ -150,12 +155,15 @@ func GenSchemas(useTypes []rust.UseType) map[string]spec.Schema {
 				WithError(e).
 				Panic("read file error")
 		}
+		code := rust.SourceCode(_code)
 		// s, us := rust.FindStruct(string(code), useType.Name)
 
 		// 获得code中的所有struct，以struct名为key，struct为value
-		structs, _ := rust.GetStructs(string(code))
+		structs, _ := code.GetStructs()
 		// 获得code中的所有enum，以enum名为key，enum为value
-		enums, us := rust.GetEnums(string(code))
+		enums, us := code.GetEnums()
+		// 获得code中的所有define types，以define type名为key，具体类型为value
+		defineTypes, _ := code.GetDefineTypes()
 
 		logger.WithFields(logrus.Fields{
 			"code":     string(code),
@@ -165,7 +173,7 @@ func GenSchemas(useTypes []rust.UseType) map[string]spec.Schema {
 		}).Debug("GetStructs and Enums from code")
 
 		if _strcut, ok := structs[useType.Name]; ok {
-			fieldUsetypes := getStructFieldUseTypes(useType, us, structs, enums)
+			fieldUsetypes := getStructFieldUseTypes(useType, us, structs, enums, defineTypes)
 			logger.WithFields(logrus.Fields{
 				"struct in useType": useType,
 				"filtered us":       fieldUsetypes,
@@ -177,7 +185,7 @@ func GenSchemas(useTypes []rust.UseType) map[string]spec.Schema {
 		}
 
 		if _enum, ok := enums[useType.Name]; ok {
-			fieldUsetypes := getEnumFieldUseTypes(useType, us, enums, structs)
+			fieldUsetypes := getEnumFieldUseTypes(useType, us, enums, structs, defineTypes)
 			logger.WithFields(logrus.Fields{
 				"enum in useType": useType,
 				"filtered us":     fieldUsetypes,
@@ -185,6 +193,11 @@ func GenSchemas(useTypes []rust.UseType) map[string]spec.Schema {
 			GenSchemas(fieldUsetypes)
 
 			usetype2Schema[useType.String()] = GenSchemaByEnum(_enum.Parse(), useType.ModPath)
+			continue
+		}
+
+		if _defineType, ok := defineTypes[useType.Name]; ok {
+			usetype2Schema[useType.String()] = GenSchemaByDefineType(_defineType, useType.ModPath)
 			continue
 		}
 
@@ -407,7 +420,7 @@ func isFieldsHasType(sp rust.StructParsed, t rust.UseType) bool {
 }
 
 // 寻找useType对应struct的struct fields中在usetypes的匹配类型，如果没有在当前文件的所有structs中寻找
-func getStructFieldUseTypes(aim rust.UseType, usePool []rust.Use, structsPool map[string]rust.Struct, enumsPool map[string]rust.Enum) []rust.UseType {
+func getStructFieldUseTypes(aim rust.UseType, usePool []rust.Use, structsPool map[string]rust.Struct, enumsPool map[string]rust.Enum, defineTypes map[string]rust.RustType) []rust.UseType {
 	var founds []rust.UseType
 	if _struct, ok := structsPool[aim.Name]; ok {
 		// 只过滤field里边包含的useType
@@ -428,7 +441,7 @@ func getStructFieldUseTypes(aim rust.UseType, usePool []rust.Use, structsPool ma
 			}
 
 			// 如果没有找到从同文件的enums中找enum
-			finded := findFieldUseType(aim, fCoreType, usePool, enumsPool, structsPool)
+			finded := findFieldUseType(aim, fCoreType, usePool, enumsPool, structsPool, defineTypes)
 			if finded != nil {
 				founds = append(founds, *finded)
 				continue
@@ -440,7 +453,7 @@ func getStructFieldUseTypes(aim rust.UseType, usePool []rust.Use, structsPool ma
 }
 
 // 寻找useType对应enum的enum fields中在usetypes的匹配类型，如果没有在当前文件的所有structs中寻找
-func getEnumFieldUseTypes(aim rust.UseType, usePool []rust.Use, enumsPool map[string]rust.Enum, structsPool map[string]rust.Struct) []rust.UseType {
+func getEnumFieldUseTypes(aim rust.UseType, usePool []rust.Use, enumsPool map[string]rust.Enum, structsPool map[string]rust.Struct, defineTypes map[string]rust.RustType) []rust.UseType {
 	founds := []rust.UseType{}
 	if _enum, ok := enumsPool[aim.Name]; ok {
 		// 只过滤field里边包含的useType
@@ -468,7 +481,7 @@ func getEnumFieldUseTypes(aim rust.UseType, usePool []rust.Use, enumsPool map[st
 				}
 
 				// 如果没有找到从同文件的enums中找enum
-				finded := findFieldUseType(aim, fCoreType, usePool, enumsPool, structsPool)
+				finded := findFieldUseType(aim, fCoreType, usePool, enumsPool, structsPool, defineTypes)
 				if finded != nil {
 					founds = append(founds, *finded)
 					continue
@@ -482,7 +495,7 @@ func getEnumFieldUseTypes(aim rust.UseType, usePool []rust.Use, enumsPool map[st
 	return founds
 }
 
-func findFieldUseType(aim rust.UseType, fCoreType string, usePool []rust.Use, enumsPool map[string]rust.Enum, structsPool map[string]rust.Struct) *rust.UseType {
+func findFieldUseType(aim rust.UseType, fCoreType string, usePool []rust.Use, enumsPool map[string]rust.Enum, structsPool map[string]rust.Struct, defineTypesPool map[string]rust.RustType) *rust.UseType {
 	for _, u := range usePool {
 		uItems := u.Parse()
 
@@ -495,7 +508,8 @@ func findFieldUseType(aim rust.UseType, fCoreType string, usePool []rust.Use, en
 
 	_, ok1 := enumsPool[fCoreType]
 	_, ok2 := structsPool[fCoreType]
-	if ok1 || ok2 {
+	_, ok3 := defineTypesPool[fCoreType]
+	if ok1 || ok2 || ok3 {
 		fUseType := aim
 		fUseType.Alias = fCoreType
 		fUseType.Name = fCoreType
@@ -508,6 +522,7 @@ func findFieldUseType(aim rust.UseType, fCoreType string, usePool []rust.Use, en
 		"use pool":        usePool,
 		"enums pool":      enumsPool,
 		"structs pool":    structsPool,
+		"defineTypesPool": defineTypesPool,
 	}).Panic("not find field useType")
 
 	return nil
