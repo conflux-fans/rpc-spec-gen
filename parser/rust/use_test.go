@@ -132,7 +132,7 @@ func parse(str string) []node {
 	for i := 0; i < max; i++ {
 
 		ps := strings.Split(prefixs[i], ",")
-		fmt.Printf("ps %v: %s\n", len(ps), ps)
+		// fmt.Printf("ps %v: %s\n", len(ps), ps)
 		for i := 0; i < len(ps); i++ {
 			if strings.TrimSpace(ps[i]) == "" {
 				continue

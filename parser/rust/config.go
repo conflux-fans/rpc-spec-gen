@@ -7,11 +7,9 @@ import (
 	"time"
 
 	"github.com/conflux-fans/rpc-spec-gen/config"
+	"github.com/sirupsen/logrus"
 )
 
-// type Config struct {
-// 	RustRootPath string
-// }
 type RustUseTypeMeta struct {
 	isBaseType bool
 	isIgnore   bool
@@ -37,36 +35,33 @@ var FolderPathOfMod = map[string]string{
 	"diem_types":                "core/src/pos/types/src/",
 	"cfxcore::transaction_pool": "core/src/transaction_pool/",
 	"primitives":                "primitives/src/",
+
+	"crate::rpc::types::eth": "client/src/rpc/types/eth/",
 }
 
 // Struct exist in rust file path
 var RustUseTypeMetas map[string]RustUseTypeMeta = map[string]RustUseTypeMeta{
-	// "cfx_types::H160":          {isBaseType: true},
-	// "cfx_types::H256":          {isBaseType: true},
-	// "cfx_types::U256":          {isBaseType: true},
-	// "cfx_types::U64":           {isBaseType: true},
-	"H160":    {isBaseType: true},
-	"H256":    {isBaseType: true},
-	"U256":    {isBaseType: true},
-	"U64":     {isBaseType: true},
-	"address": {isBaseType: true},
-	"String":  {isBaseType: true},
-	"bool":    {isBaseType: true},
-	// "super::super::RpcAddress": {isBaseType: true},
-	"u64":        {isBaseType: true},
-	"u8":         {isBaseType: true},
-	"RpcAddress": {isBaseType: true},
-	// "Account":                       {isBaseType: true},
-	"Address":    {isBaseType: true},
-	"Network":    {isBaseType: true},
-	"Bytes":      {isBaseType: true},
-	"PosBlockId": {isBaseType: true},
-	"Bloom":      {isBaseType: true},
-	// "VariadicValue<RpcAddress>":     {isBaseType: true},
-	// "VariadicValue<H256>":           {isBaseType: true},
+	"H64":         {isBaseType: true},
+	"H160":        {isBaseType: true},
+	"H256":        {isBaseType: true},
+	"H512":        {isBaseType: true},
+	"H2048":       {isBaseType: true},
+	"U256":        {isBaseType: true},
+	"U64":         {isBaseType: true},
+	"address":     {isBaseType: true},
+	"String":      {isBaseType: true},
+	"bool":        {isBaseType: true},
+	"u64":         {isBaseType: true},
+	"u8":          {isBaseType: true},
+	"usize":       {isBaseType: true},
+	"RpcAddress":  {isBaseType: true},
+	"Address":     {isBaseType: true},
+	"Network":     {isBaseType: true},
+	"Bytes":       {isBaseType: true},
+	"PosBlockId":  {isBaseType: true},
+	"Bloom":       {isBaseType: true},
 	"StorageRoot": {isBaseType: true},
-	// "VariadicValue%3CRpcAddress%3E": {isBaseType: true},
-	// "VariadicValue%3CH256%3E":       {isBaseType: true},
+	"Index":       {isBaseType: true},
 
 	"jsonrpc_core::Result":                {isIgnore: true},
 	"jsonrpc_core::ResultasJsonRpcResult": {isIgnore: true},
@@ -125,7 +120,7 @@ var RustUseTypeMetas map[string]RustUseTypeMeta = map[string]RustUseTypeMeta{
 
 func GetUseTypeMeta(useType UseType) (*RustUseTypeMeta, bool) {
 
-	if useType.Name == "RpcAddress" {
+	if useType.Name == "FilterAddress" {
 		time.Sleep(0)
 	}
 
@@ -153,12 +148,14 @@ func GetUseTypeMeta(useType UseType) (*RustUseTypeMeta, bool) {
 			if strings.HasSuffix(file.Name(), ".rs") {
 				// 填充RustUseTypeMetas
 				filePath := path.Join(folderPath, file.Name())
-				content, err := ioutil.ReadFile(filePath)
+				_content, err := ioutil.ReadFile(filePath)
+				content := NewSouceCode(string(_content))
 				if err != nil {
 					logger.WithField("filePath", filePath).WithError(err).Panic("read file error")
 				}
-				structs, _ := GetStructs(string(content))
-				enums, _ := GetEnums(string(content))
+				structs, _ := content.GetStructs()
+				enums, _ := content.GetEnums()
+				defineTypes, _ := content.GetDefineTypes()
 				for s := range structs {
 					sUsetype := UseType{useType.ModPath, s, s}
 					meta := RustUseTypeMeta{
@@ -172,6 +169,13 @@ func GetUseTypeMeta(useType UseType) (*RustUseTypeMeta, bool) {
 						file: strings.TrimPrefix(filePath, config.GetConfig().RustRootPath),
 					}
 					addTypeMetaIfNotExist(eUsetype, meta)
+				}
+				for d := range defineTypes {
+					dUsetype := UseType{useType.ModPath, d, d}
+					meta := RustUseTypeMeta{
+						file: strings.TrimPrefix(filePath, config.GetConfig().RustRootPath),
+					}
+					addTypeMetaIfNotExist(dUsetype, meta)
 				}
 			}
 		}
@@ -201,6 +205,14 @@ func addTypeMetaIfNotExist(useType UseType, meta RustUseTypeMeta) {
 		return
 	}
 
+	if strings.HasSuffix(useType.Name, "FilterAddress") {
+		time.Sleep(0)
+	}
+
+	logger.WithFields(logrus.Fields{
+		"useType": useType,
+		"meta":    meta,
+	}).Debug("addTypeMetaIfNotExist")
 	if _, ok := RustUseTypeMetas[useType.String()]; !ok {
 		RustUseTypeMetas[useType.String()] = meta
 	}
@@ -214,7 +226,7 @@ func IsBaseType(typeName string) bool {
 	}
 
 	for k, v := range RustUseTypeMetas {
-		if strings.HasSuffix(typeName, k) {
+		if strings.HasSuffix(typeName, "::"+k) {
 			return v.isBaseType
 		}
 	}

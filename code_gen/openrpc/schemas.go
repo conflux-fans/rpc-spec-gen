@@ -23,14 +23,25 @@ var basetypeSchemas = map[string]*spec.Schema{
 	},
 	"u64": {
 		SchemaProps: spec.SchemaProps{
-			Type:    spec.StringOrArray{"string"},
+			Type:    spec.StringOrArray{"number"},
 			Pattern: `^[1-9]\d*$`,
 		},
 	},
 	"u8": {
 		SchemaProps: spec.SchemaProps{
-			Type:    spec.StringOrArray{"string"},
+			Type:    spec.StringOrArray{"number"},
 			Pattern: `^[1-9]\d*$`,
+		},
+	},
+	"usize": {
+		SchemaProps: spec.SchemaProps{
+			Type: spec.StringOrArray{"number"},
+		},
+	},
+	"H64": {
+		SchemaProps: spec.SchemaProps{
+			Type:    spec.StringOrArray{"string"},
+			Pattern: "^0x[0-9,a-f,A-F]{16}$",
 		},
 	},
 	"H160": {
@@ -43,6 +54,18 @@ var basetypeSchemas = map[string]*spec.Schema{
 		SchemaProps: spec.SchemaProps{
 			Type:    spec.StringOrArray{"string"},
 			Pattern: "^0x[0-9,a-f,A-F]{64}$",
+		},
+	},
+	"H512": {
+		SchemaProps: spec.SchemaProps{
+			Type:    spec.StringOrArray{"string"},
+			Pattern: "^0x[0-9,a-f,A-F]{128}$",
+		},
+	},
+	"H2048": {
+		SchemaProps: spec.SchemaProps{
+			Type:    spec.StringOrArray{"string"},
+			Pattern: "^0x[0-9,a-f,A-F]{512}$",
 		},
 	},
 	"U256": {
@@ -99,16 +122,15 @@ var basetypeSchemas = map[string]*spec.Schema{
 			Pattern: `^(NET\d+|CFX|CFXTEST)(:TYPE\..*|):[ABCDEFGHJKMNPRSTUVWXYZ0123456789]{42}$`,
 		},
 	},
-	// "Account": {
+	// "EpochNumber": {
 	// 	SchemaProps: spec.SchemaProps{
 	// 		Type:    spec.StringOrArray{"string"},
-	// 		Pattern: `^(NET\d+|CFX|CFXTEST)(:TYPE\..*|):[ABCDEFGHJKMNPRSTUVWXYZ0123456789]42)$`,
+	// 		Pattern: "^.*$",
 	// 	},
 	// },
-	"EpochNumber": {
+	"Index": {
 		SchemaProps: spec.SchemaProps{
-			Type:    spec.StringOrArray{"string"},
-			Pattern: "^.*$",
+			Type: spec.StringOrArray{"number"},
 		},
 	},
 }
