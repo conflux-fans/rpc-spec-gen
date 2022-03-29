@@ -155,7 +155,7 @@ func GenSchemas(useTypes []rust.UseType) map[string]spec.Schema {
 				WithError(e).
 				Panic("read file error")
 		}
-		code := rust.SourceCode(_code)
+		code := rust.NewSouceCode(string(_code))
 		// s, us := rust.FindStruct(string(code), useType.Name)
 
 		// 获得code中的所有struct，以struct名为key，struct为value
@@ -166,7 +166,7 @@ func GenSchemas(useTypes []rust.UseType) map[string]spec.Schema {
 		defineTypes, _ := code.GetDefineTypes()
 
 		logger.WithFields(logrus.Fields{
-			"code":     string(code),
+			"code":     code.Cleaned(),
 			"structs":  structs,
 			"enums":    enums,
 			"usetypes": us,
@@ -202,7 +202,7 @@ func GenSchemas(useTypes []rust.UseType) map[string]spec.Schema {
 		}
 
 		logrus.WithFields(logrus.Fields{
-			"code":           string(code),
+			"code":           code.Cleaned(),
 			"structs finded": structs,
 			"use types":      us,
 		}).Panicf("not found struct <%v> from code", useType.Name)

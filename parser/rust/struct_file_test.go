@@ -66,7 +66,7 @@ pub struct Call {
     call_type: CallType,
 }
 }`
-	matched, uses := SourceCode(str).FindStruct("Call")
+	matched, uses := NewSouceCode(str).FindStruct("Call")
 	fmt.Println(matched)
 	fmt.Println(uses)
 
@@ -89,7 +89,7 @@ pub struct Account {
     pub status: NodeLockStatus,
 }
     `
-	matched, uses = SourceCode(str).FindStruct("Account")
+	matched, uses = NewSouceCode(str).FindStruct("Account")
 	fmt.Println(matched)
 	fmt.Println(uses)
 
@@ -138,7 +138,7 @@ pub struct Signature {
     pub votes: U64,
 }
     `
-	matched, uses = SourceCode(str).FindStruct("Block")
+	matched, uses = NewSouceCode(str).FindStruct("Block")
 	fmt.Println(matched)
 	fmt.Println(uses)
 }

@@ -11,10 +11,40 @@ import (
 // TODO: 移除注释掉的函数，如 cfx.rs最后的几个注释掉的函数
 // TODO: 移除掉mod test (/Users/wangdayong/myspace/mywork/conflux-rust/client/src/rpc/types/eth/sync.rs)
 
-type SourceCode string
+type SourceCode struct {
+	raw string
+	// removed unused comments and test mode
+	cleand string
+}
+
+func NewSouceCode(raw string) *SourceCode {
+	s := SourceCode{}
+	s.raw = raw
+	s.clean()
+	return &s
+}
+
+func (sc *SourceCode) clean() {
+	// remove comment `//.*?$`
+	// remove test mode `#\[cfg\(test\)\].*?^}`
+	cleand := regexp.MustCompile(`(?ms)[^/]//[^/].*?$`).ReplaceAllString(sc.raw, "")
+	cleand = regexp.MustCompile(`(?ms)#\[cfg\(test\)\].*?^}`).ReplaceAllString(cleand, "")
+	// FIXME: 多重注释会导致解析错误，如 `begin /*abc /*def*/ ghi*/ end`
+	cleand = regexp.MustCompile(`(?ms)/\*.*?\*/`).ReplaceAllString(cleand, "")
+
+	sc.cleand = cleand
+}
+
+func (sc *SourceCode) Raw() string {
+	return sc.raw
+}
+
+func (sc *SourceCode) Cleaned() string {
+	return sc.cleand
+}
 
 func (sc SourceCode) FindStruct(structName string) (Struct, []Use) {
-	content := string(sc)
+	content := sc.cleand
 	var re = regexp2.MustCompile(fmt.Sprintf(`\/\/\/(?:.(?!\/\/\/))+pub struct %v {.*?}|pub struct %v {.*?}`, structName, structName), regexp2.Multiline|regexp2.Singleline)
 	matched, e := re.FindStringMatch(content)
 	if e != nil {
@@ -33,7 +63,7 @@ func (sc SourceCode) FindStruct(structName string) (Struct, []Use) {
 }
 
 func (sc SourceCode) GetUses() []Use {
-	content := string(sc)
+	content := sc.cleand
 	reg := regexp.MustCompile(`(?mUs)use .*;`)
 	finds := reg.FindAllString(content, -1)
 	// fmt.Printf("useFinded %v\n", finds)
@@ -46,7 +76,7 @@ func (sc SourceCode) GetUses() []Use {
 }
 
 func (sc SourceCode) GetTraits() ([]Trait, []Use) {
-	content := string(sc)
+	content := sc.cleand
 	reg := regexp.MustCompile(`(?mUs)(\/\/\/.*\n|)#\[rpc\(.*\)\]\npub trait .* \{[\s\S]*}`)
 	finds := reg.FindAllString(string(content), -1)
 	// fmt.Printf("traitRegFinded len %v, %v\n", len(finds), finds)
@@ -83,7 +113,7 @@ func (sc SourceCode) GetEnums() (map[string]Enum, []Use) {
 }
 
 func (sc SourceCode) GetDefineTypes() (map[string]RustType, []Use) {
-	content := string(sc)
+	content := sc.cleand
 	var re = regexp2.MustCompile(`^\/\/\/[^;]*?pub type (.*?) = (.*?);|pub type (.*?) = (.*?);`, regexp2.Multiline|regexp2.Singleline)
 	m, e := re.FindStringMatch(content)
 	if e != nil {
@@ -109,7 +139,7 @@ func (sc SourceCode) GetDefineTypes() (map[string]RustType, []Use) {
 }
 
 func (sc SourceCode) getStructsOrEnums(re *regexp2.Regexp) (map[string]string, []Use) {
-	content := string(sc)
+	content := sc.cleand
 	m, e := re.FindStringMatch(content)
 	if e != nil {
 		panic(e)

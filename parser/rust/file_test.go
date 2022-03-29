@@ -380,7 +380,7 @@ impl From<KeptVMStatus> for RpcTransactionStatus {
 
 		`,
 	}
-	structs, us := SourceCode(str[1]).GetStructs()
+	structs, us := NewSouceCode(str[1]).GetStructs()
 	for k, v := range structs {
 		fmt.Printf("struct k:%v, \nv:%v\n", k, v)
 	}
@@ -427,11 +427,247 @@ impl Default for Status {
 		}
 	}
 }`
-	enum, us := SourceCode(str).GetEnums()
+	enum, us := NewSouceCode(str).GetEnums()
 	for k, v := range enum {
 		fmt.Printf("enum k:%v, \nv:%v\n", k, v)
 	}
 	for k, v := range us {
 		fmt.Printf("use k:%v, \nv:%v\n", k, v)
 	}
+}
+
+func TestNewScurceCode(t *testing.T) {
+	raws := []string{`
+    // Copyright 2021 Conflux Foundation. All rights reserved.
+// Conflux is free software and distributed under GNU General Public License.
+// See http://www.gnu.org/licenses/
+
+// Copyright 2015-2020 Parity Technologies (UK) Ltd.
+// This file is part of OpenEthereum.
+
+// OpenEthereum is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+
+// OpenEthereum is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with OpenEthereum.  If not, see <http://www.gnu.org/licenses/>.
+
+//! Eth rpc interface.
+use cfx_types::{H160, H256, U256, U64};
+use jsonrpc_core::Result;
+use jsonrpc_derive::rpc;
+
+use crate::rpc::types::{
+    eth::{
+        Block, BlockNumber, CallRequest, EthRpcLogFilter, FilterChanges, Log,
+        Receipt, SyncStatus, Transaction,
+    },
+    Bytes, Index,
+};
+
+/// Eth rpc interface.
+#[rpc(server)]
+pub trait Eth {
+    #[rpc(name = "web3_clientVersion")]
+    fn client_version(&self) -> Result<String>;
+
+    /// Returns true if client is actively mining new blocks.
+    #[rpc(name = "eth_mining")]
+    fn is_mining(&self) -> Result<bool>;
+
+    /// Returns the chain ID used for transaction signing at the
+    /// current best block. None is returned if not
+    /// available.
+    #[rpc(name = "eth_chainId")]
+    fn chain_id(&self) -> Result<Option<U64>>;
+
+    /// Returns current gas_price.
+    #[rpc(name = "eth_gasPrice")]
+    fn gas_price(&self) -> Result<U256>;
+
+    /// Returns current max_priority_fee
+    #[rpc(name = "eth_maxPriorityFeePerGas")]
+    fn max_priority_fee_per_gas(&self) -> Result<U256>;
+
+    // /// Returns transaction fee history.
+    // #[rpc(name = "eth_feeHistory")]
+    // fn fee_history(&self, _: U256, _: BlockNumber, _: Option<Vec<f64>>)
+    //     -> BoxFuture<EthFeeHistory>;
+
+    /// Returns balance of the given account.
+    #[rpc(name = "eth_getBalance")]
+    fn balance(&self, _: H160, _: Option<BlockNumber>) -> Result<U256>;
+
+    // /// Returns the account- and storage-values of the specified account
+    // including the Merkle-proof #[rpc(name = "eth_getProof")]
+    // fn proof(&self, _: H160, _: Vec<H256>, _: Option<BlockNumber>) ->
+    // BoxFuture<EthAccount>;
+
+    /// Returns content of the storage at given address.
+    #[rpc(name = "eth_getStorageAt")]
+    fn storage_at(
+        &self, _: H160, _: U256, _: Option<BlockNumber>,
+    ) -> jsonrpc_core::Result<H256>;
+
+    /// Returns an uncles at given block and index.
+    #[rpc(name = "eth_getUncleByBlockNumberAndIndex")]
+    fn uncle_by_block_number_and_index(
+        &self, _: BlockNumber, _: Index,
+    ) -> Result<Option<Block>>;
+
+    // /// Returns available compilers.
+    // /// @deprecated
+    // #[rpc(name = "eth_getCompilers")]
+    // fn compilers(&self) -> Result<Vec<String>>;
+    //
+    // /// Compiles lll code.
+    // /// @deprecated
+    // #[rpc(name = "eth_compileLLL")]
+    // fn compile_lll(&self, _: String) -> Result<Bytes>;
+    //
+    // /// Compiles solidity.
+    // /// @deprecated
+    // #[rpc(name = "eth_compileSolidity")]
+    // fn compile_solidity(&self, _: String) -> Result<Bytes>;
+    //
+    // /// Compiles serpent.
+    // /// @deprecated
+    // #[rpc(name = "eth_compileSerpent")]
+    // fn compile_serpent(&self, _: String) -> Result<Bytes>;
+
+    /// Returns logs matching given filter object.
+    #[rpc(name = "eth_getLogs")]
+    fn logs(&self, _: EthRpcLogFilter) -> Result<Vec<Log>>;
+
+    // /// Returns the hash of the current block, the seedHash, and the boundary
+    // condition to be met. #[rpc(name = "eth_getWork")]
+    // fn work(&self, _: Option<u64>) -> Result<Work>;
+
+    // /// Used for submitting a proof-of-work solution.
+    // #[rpc(name = "eth_submitWork")]
+    // fn submit_work(&self, _: H64, _: H256, _: H256) -> Result<bool>;
+
+    /// Used for submitting mining hashrate.
+    #[rpc(name = "eth_submitHashrate")]
+    fn submit_hashrate(&self, _: U256, _: H256) -> Result<bool>;
+}
+
+/// Eth filters rpc api (polling).
+// TODO: do filters api properly
+#[rpc(server)]
+pub trait EthFilter {
+    /// Returns id of new filter.
+    #[rpc(name = "eth_newFilter")]
+    fn new_filter(&self, _: EthRpcLogFilter) -> Result<U256>;
+
+    /// Returns id of new block filter.
+    #[rpc(name = "eth_newBlockFilter")]
+    fn new_block_filter(&self) -> Result<U256>;
+
+    /// Returns id of new block filter.
+    #[rpc(name = "eth_newPendingTransactionFilter")]
+    fn new_pending_transaction_filter(&self) -> Result<U256>;
+
+    /// Returns filter changes since last poll.
+    #[rpc(name = "eth_getFilterChanges")]
+    fn filter_changes(&self, _: Index) -> Result<FilterChanges>;
+
+    /// Returns all logs matching given filter (in a range 'from' - 'to').
+    #[rpc(name = "eth_getFilterLogs")]
+    fn filter_logs(&self, _: Index) -> Result<Vec<Log>>;
+
+    /// Uninstalls filter.
+    #[rpc(name = "eth_uninstallFilter")]
+    fn uninstall_filter(&self, _: Index) -> Result<bool>;
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::{SyncInfo, SyncStatus};
+    use serde_json;
+
+    #[test]
+    fn test_serialize_sync_info() {
+        let t = SyncInfo::default();
+        let serialized = serde_json::to_string(&t).unwrap();
+        assert_eq!(
+            serialized,
+            r#"{"startingBlock":"0x0","currentBlock":"0x0","highestBlock":"0x0","warpChunksAmount":null,"warpChunksProcessed":null}"#
+        );
+    }
+}
+
+
+/// Transaction
+#[derive(Debug, Default, Clone, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Transaction {
+    // /// transaction type
+    // #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    // pub transaction_type: Option<U64>,
+    /// Hash
+    pub hash: H256,
+    /// Nonce
+    pub nonce: U256,
+    /// Block hash
+    pub block_hash: Option<H256>,
+    /// Block number
+    pub block_number: Option<U256>,
+    /// Transaction Index
+    pub transaction_index: Option<U256>,
+    /// Sender
+    pub from: H160,
+    /// Recipient
+    pub to: Option<H160>,
+    /// Transfered value
+    pub value: U256,
+    /// Gas Price
+    pub gas_price: U256,
+    /// Max fee per gas
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub max_fee_per_gas: Option<U256>,
+    /// Gas
+    pub gas: U256,
+    /// Data
+    pub input: Bytes,
+    /// Creates contract
+    pub creates: Option<H160>,
+    /// Raw transaction data
+    pub raw: Bytes,
+    /// Public key of the signer.
+    pub public_key: Option<H512>,
+    /// The network id of the transaction, if any.
+    pub chain_id: Option<U64>,
+    /// The standardised V field of the signature (0 or 1). Used by legacy
+    /// transaction
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub standard_v: Option<U256>,
+    /// The standardised V field of the signature.
+    pub v: U256,
+    /// The R field of the signature.
+    pub r: U256,
+    /// The S field of the signature.
+    pub s: U256,
+    // Whether tx is success
+    pub status: Option<U64>,
+    /* /// Transaction activates at specified block.
+     * pub condition: Option<TransactionCondition>,
+     * /// optional access list
+     * #[serde(skip_serializing_if = "Option::is_none")]
+     * pub access_list: Option<AccessList>,
+     * /// miner bribe
+     * #[serde(skip_serializing_if = "Option::is_none")]
+     * pub max_priority_fee_per_gas: Option<U256>, */
+}
+
+    `}
+	sc := NewSouceCode(raws[0])
+	fmt.Println(sc.Cleaned())
 }
