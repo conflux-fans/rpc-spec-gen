@@ -8,8 +8,8 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// TODO: 移除注释掉的函数，如 cfx.rs最后的几个注释掉的函数
-// TODO: 移除掉mod test (/Users/wangdayong/myspace/mywork/conflux-rust/client/src/rpc/types/eth/sync.rs)
+// DONE TODO: 移除注释掉的函数，如 cfx.rs最后的几个注释掉的函数
+// DONE TODO: 移除掉mod test (/Users/wangdayong/myspace/mywork/conflux-rust/client/src/rpc/types/eth/sync.rs)
 
 type SourceCode struct {
 	raw string
