@@ -248,26 +248,6 @@ func getParamContentDescriptor(p rust.ParamParsed, useTypePool []rust.UseType) *
 	u := mustFindUseType(p.Type.InnestCoreTypeName(), useTypePool)
 	refSchema := getUseTypeRefSchema(*u)
 
-	// c := Content{
-	// 	Name:   p.Name,
-	// 	Schema: spec.Schema{},
-	// }
-
-	// for {
-	// 	if p.Type.IsOption {
-	// 		c.Required = !p.Type.IsOption
-	// 		continue
-	// 	}
-
-	// 	if p.Type.IsArray {
-	// 		c.Schema.Type = spec.StringOrArray{"array"}
-	// 		c.Schema.Items = &spec.SchemaOrArray{Schema: &refSchema}
-	// 		continue
-	// 	}
-
-	// 	c.Schema = refSchema
-	// }
-
 	c := Content{
 		Name:     p.Name,
 		Required: !p.Type.IsOption,
@@ -287,28 +267,7 @@ func getResultContentDescriptor(p rust.ReturnParsed, useTypePool []rust.UseType)
 	}
 
 	return &ContentDescriptor{Content: c}
-
-	// c := Content{
-	// 	Name:   r.Name,
-	// 	Schema: spec.Schema{},
-	// }
-
-	// if r.Type.IsArray {
-	// 	c.Schema.Type = spec.StringOrArray{"array"}
-	// 	c.Schema.Items = &spec.SchemaOrArray{Schema: &refSchema}
-	// } else {
-	// 	c.Schema = refSchema
-	// }
-
-	// if r.Type.IsOption {
-	// 	c.Schema.Nullable = true
-	// }
-
-	// return &ContentDescriptor{Content: c}
 }
-
-// func genSchemaForParsedType(t rust.TypeParsed, coreRefSchema spec.Schema) spec.Schema {
-// 	s := spec.Schema{}
 
 func genSchemaForParsedType(t rust.TypeParsed, coreRefSchema spec.Schema) *spec.Schema {
 	if t.Core == nil {
@@ -329,13 +288,20 @@ func genSchemaForParsedType(t rust.TypeParsed, coreRefSchema spec.Schema) *spec.
 		s.Items = items
 		return s
 	}
+
 	if t.IsVariadicValue {
+		s := &spec.Schema{}
+		s.OneOf = append(s.OneOf, *coreSchema)
+		s.OneOf = append(s.OneOf, spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Type:  spec.StringOrArray{"array"},
+				Items: &spec.SchemaOrArray{Schema: coreSchema},
+			},
+		})
+		s.Nullable = true
 	}
 	return nil
 }
-
-// 	return s
-// }
 
 func GenMethods(traitParsed rust.TraitParsed, useTypes []rust.UseType) []*Method {
 	var methods []*Method

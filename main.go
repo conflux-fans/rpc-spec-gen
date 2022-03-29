@@ -37,6 +37,8 @@ var logger = &logrus.Logger{
 func main() {
 	traitsFile := "/Users/wangdayong/myspace/mywork/conflux-rust/client/src/rpc/traits/cfx_space/cfx_clean.rs1"
 
+	traitsFile = "/Users/wangdayong/myspace/mywork/conflux-rust/client/src/rpc/traits/eth_space/eth_clean.rs1"
+
 	space := path.Join(traitsFile, "..")[len(config.RustRootPath+config.TraitRootPath):]
 
 	traits, _ := ioutil.ReadFile(traitsFile)

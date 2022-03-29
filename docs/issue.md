@@ -11,7 +11,7 @@
 11. TransactionStatus schema 定义
 
 TODO:
-1. VariadicValue Schema生成 （rpc logfilter topics）
+1. VariadicValue Schema生成 （rpc logfilter topics）V
 2. struct enum 根据是否实现了 Serialize 生成不同格式
 3. one of 多一个空schema (BlockHashOrEpochNumber) V
 4. 默认枚举camelcase
