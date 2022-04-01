@@ -2,8 +2,8 @@ package openrpc
 
 import (
 	"encoding/json"
-	"io/ioutil"
 
+	"github.com/conflux-fans/rpc-spec-gen/code_gen/openrpc/specconfig"
 	"github.com/conflux-fans/rpc-spec-gen/parser/rust"
 	"github.com/conflux-fans/rpc-spec-gen/utils"
 	"github.com/go-openapi/spec"
@@ -11,12 +11,30 @@ import (
 )
 
 func CompleteDoc(doc OpenRPCSpec1, space string) OpenRPCSpec1 {
+
+	if doc.OpenRPC == "" {
+		doc.OpenRPC = "1.2.6"
+	}
+
+	if doc.Info.Version == "" {
+		doc.Info.Version = "0.1.0"
+	}
+
 	if doc.Components == nil {
 		doc.Components = &Components{}
 	}
 
 	if doc.Components.Schemas == nil {
 		doc.Components.Schemas = make(map[string]*spec.Schema)
+	}
+
+	// 根据配置替换 method summary 和 result name
+	specConfig := specconfig.GetSpecConfig(space)
+	for _, m := range doc.Methods {
+		methodConfig := specConfig.Methods[m.Name]
+		m.Summary = methodConfig.Summary
+		m.Description = methodConfig.Description
+		m.Result.Name = methodConfig.ResultName
 	}
 
 	// 递归查找所有schema及子项相关schema
@@ -38,6 +56,7 @@ func CompleteDoc(doc OpenRPCSpec1, space string) OpenRPCSpec1 {
 	for _, schema := range schemas {
 		setSchemaRefBeName(schema)
 	}
+
 	return doc
 }
 
@@ -46,7 +65,7 @@ func fillComponent(comp *Components, schema *spec.Schema, space string) {
 		return
 	}
 
-	useType := parseSchemaRefToUseType(schema.Ref.String())
+	useType := specconfig.ParseSchemaRefToUseType(schema.Ref.String())
 
 	meta, ok := rust.GetUseTypeMeta(useType)
 	if !ok {
@@ -56,16 +75,16 @@ func fillComponent(comp *Components, schema *spec.Schema, space string) {
 		}).Panic("meta is nil")
 	}
 	if meta.IsBaseType() {
-		comp.Schemas[useType.Name] = mustGetBasetypeSchemasByUseType(useType)
+		comp.Schemas[useType.Name] = specconfig.MustGetBasetypeSchemasByUseType(useType)
 		return
 	}
 
-	comp.Schemas[useType.Name] = mustLoadSchema(space, useType)
+	comp.Schemas[useType.Name] = specconfig.MustLoadSchema(space, useType)
 }
 
 func convet2RefWithName(refWithFullname string) spec.Ref {
-	useType := parseSchemaRefToUseType(refWithFullname)
-	refWithName := spec.MustCreateRef(schemaRefRoot + useType.Name)
+	useType := specconfig.ParseSchemaRefToUseType(refWithFullname)
+	refWithName := spec.MustCreateRef(specconfig.SchemaRefRoot + useType.Name)
 	return refWithName
 }
 
@@ -136,8 +155,8 @@ func getRelatedSchemas(s spec.Schema, space string) []*spec.Schema {
 
 	// 当为引用时，根据ref找到usetype，然后loadschema，然后 get related schemas
 	if s.Ref.String() != "" {
-		useType := parseSchemaRefToUseType(s.Ref.String())
-		realSchema := mustLoadSchema(space, useType)
+		useType := specconfig.ParseSchemaRefToUseType(s.Ref.String())
+		realSchema := specconfig.MustLoadSchema(space, useType)
 
 		if realSchema == nil {
 			logger.WithField("useType", useType).Panic("not found schema")
@@ -172,28 +191,4 @@ func getDocAllSchemas(doc OpenRPCSpec1, space string) []*spec.Schema {
 		schemas = append(schemas, doc.Components.Schemas[k])
 	}
 	return schemas
-}
-
-func mustLoadSchema(space string, useType rust.UseType) *spec.Schema {
-
-	if useType.IsBaseType() {
-		return mustGetBasetypeSchemasByUseType(useType)
-	}
-
-	savePath := getSchemaSavePath(space, useType.String())
-	content, e := ioutil.ReadFile(savePath)
-
-	if e != nil {
-		panic(e)
-	}
-
-	schema := spec.Schema{}
-	if e := json.Unmarshal(content, &schema); e != nil {
-		panic(e)
-	}
-
-	j, _ := json.MarshalIndent(schema, "", "  ")
-
-	logger.WithField("schema", string(j)).Debug("load schema")
-	return &schema
 }

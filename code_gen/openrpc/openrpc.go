@@ -6,8 +6,10 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"strings"
 	"time"
 
+	"github.com/conflux-fans/rpc-spec-gen/code_gen/openrpc/specconfig"
 	"github.com/conflux-fans/rpc-spec-gen/config"
 	"github.com/conflux-fans/rpc-spec-gen/parser/rust"
 	"github.com/conflux-fans/rpc-spec-gen/utils"
@@ -16,7 +18,7 @@ import (
 	prefixed "github.com/x-cray/logrus-prefixed-formatter"
 )
 
-var usetype2Schema = map[string]spec.Schema{}
+var usetype2Schema = map[string]*spec.Schema{}
 
 var logger = &logrus.Logger{
 	Out:   os.Stderr,
@@ -31,12 +33,12 @@ var logger = &logrus.Logger{
 
 func init() {
 	// init enum2Schema for enums which custom implement json serailize
-	for k, v := range customSchemas {
-		usetype2Schema[k] = *v
+	for k, v := range specconfig.CustomSchemas {
+		usetype2Schema[k] = v
 	}
 }
 
-func GenSchemaByStruct(structParsed rust.StructParsed, defaultModPath []string) spec.Schema {
+func GenSchemaByStruct(structParsed rust.StructParsed, defaultModPath []string) *spec.Schema {
 
 	// logger.WithField("struct parsed", utils.MustJsonPretty(structParsed)).Info("GenSchemaByStruct")
 
@@ -61,10 +63,10 @@ func GenSchemaByStruct(structParsed rust.StructParsed, defaultModPath []string) 
 		s.Properties[fNameCamleCase] = *refSchema
 	}
 
-	return s
+	return &s
 }
 
-func GenSchemaByEnum(enumParsed rust.EnumParsed, defaultModPath []string) spec.Schema {
+func GenSchemaByEnum(enumParsed rust.EnumParsed, defaultModPath []string) *spec.Schema {
 
 	if v, ok := usetype2Schema[enumParsed.Name]; ok {
 		return v
@@ -98,12 +100,12 @@ func GenSchemaByEnum(enumParsed rust.EnumParsed, defaultModPath []string) spec.S
 	}
 
 	if len(enums) == 0 {
-		return s
+		return &s
 	}
 
 	if !hasTumple {
 		s.Enum = enums
-		return s
+		return &s
 	}
 
 	s.OneOf = append(s.OneOf, spec.Schema{
@@ -111,15 +113,15 @@ func GenSchemaByEnum(enumParsed rust.EnumParsed, defaultModPath []string) spec.S
 			Enum: enums,
 		},
 	})
-	return s
+	return &s
 }
 
-func GenSchemaByDefineType(defineType rust.RustType, defaultModPath []string) spec.Schema {
+func GenSchemaByDefineType(defineType rust.RustType, defaultModPath []string) *spec.Schema {
 	typeParsed := defineType.Parse()
-	return *genObjRefSchema(typeParsed, defaultModPath)
+	return genObjRefSchema(typeParsed, defaultModPath)
 }
 
-func GenSchemas(useTypes []rust.UseType) map[string]spec.Schema {
+func GenSchemas(useTypes []rust.UseType) map[string]*spec.Schema {
 
 	logger.WithField("useTypes", useTypes).Debug("GenSchemas")
 
@@ -181,10 +183,8 @@ func GenSchemas(useTypes []rust.UseType) map[string]spec.Schema {
 			GenSchemas(fieldUsetypes)
 
 			usetype2Schema[useType.String()] = GenSchemaByStruct(_strcut.Parse(), useType.ModPath)
-			continue
-		}
-
-		if _enum, ok := enums[useType.Name]; ok {
+			// continue
+		} else if _enum, ok := enums[useType.Name]; ok {
 			fieldUsetypes := getEnumFieldUseTypes(useType, us, enums, structs, defineTypes)
 			logger.WithFields(logrus.Fields{
 				"enum in useType": useType,
@@ -192,22 +192,30 @@ func GenSchemas(useTypes []rust.UseType) map[string]spec.Schema {
 			}).Debug("filter struct field using use types")
 			GenSchemas(fieldUsetypes)
 
+			if strings.HasSuffix(useType.Name, "BlockNumber") {
+				time.Sleep(0)
+			}
+
 			usetype2Schema[useType.String()] = GenSchemaByEnum(_enum.Parse(), useType.ModPath)
-			continue
-		}
-
-		if _defineType, ok := defineTypes[useType.Name]; ok {
+			// continue
+		} else if _defineType, ok := defineTypes[useType.Name]; ok {
 			usetype2Schema[useType.String()] = GenSchemaByDefineType(_defineType, useType.ModPath)
-			continue
+			// continue
 		}
 
-		logrus.WithFields(logrus.Fields{
-			"code":           code.Cleaned(),
-			"structs finded": structs,
-			"use types":      us,
-		}).Panicf("not found struct <%v> from code", useType.Name)
-		panic("not found struct")
+		if !ok {
+			logrus.WithFields(logrus.Fields{
+				"code":           code.Cleaned(),
+				"structs finded": structs,
+				"use types":      us,
+			}).Panicf("not found struct <%v> from code", useType.Name)
+		}
+
+		if h, ok := specconfig.SchemaPostHooks[useType.String()]; ok {
+			h(usetype2Schema[useType.String()])
+		}
 	}
+
 	return usetype2Schema
 }
 
@@ -221,7 +229,7 @@ func SaveSchemas(useTypes []rust.UseType, space string) {
 
 	for k, schema := range schemas {
 		j, _ := json.MarshalIndent(schema, "", "  ")
-		p := getSchemaSavePath(space, k)
+		p := specconfig.GetSchemaSavePath(space, k)
 
 		saveFile(p, j)
 	}
@@ -259,7 +267,7 @@ func GenMethod(funcParsed rust.FuncParsed, useTypePool []rust.UseType) *Method {
 func getParamContentDescriptor(p rust.ParamParsed, useTypePool []rust.UseType) *ContentDescriptor {
 
 	u := mustFindUseType(p.Type.InnestCoreTypeName(), useTypePool)
-	refSchema := getUseTypeRefSchema(*u)
+	refSchema := specconfig.GetUseTypeRefSchema(*u)
 
 	c := Content{
 		Name:     p.Name,
@@ -272,7 +280,7 @@ func getParamContentDescriptor(p rust.ParamParsed, useTypePool []rust.UseType) *
 
 func getResultContentDescriptor(p rust.ReturnParsed, useTypePool []rust.UseType) *ContentDescriptor {
 	u := mustFindUseType(p.Type.InnestCoreTypeName(), useTypePool)
-	refSchema := getUseTypeRefSchema(*u)
+	refSchema := specconfig.GetUseTypeRefSchema(*u)
 
 	c := Content{
 		Name:   p.Name,
@@ -551,7 +559,7 @@ func genObjRefSchema(_type rust.TypeParsed, defaultModPath []string) *spec.Schem
 			ut = getSameLevelUseType(_type.Name, defaultModPath)
 		}
 
-		s = getUseTypeRefSchema(*ut)
+		s = specconfig.GetUseTypeRefSchema(*ut)
 		s.Title = _type.Name
 	}
 

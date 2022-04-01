@@ -1,6 +1,9 @@
-package openrpc
+package specconfig
 
 import (
+	"encoding/json"
+	"io/ioutil"
+	"os"
 	"path"
 	"regexp"
 	"strings"
@@ -9,13 +12,26 @@ import (
 	"github.com/conflux-fans/rpc-spec-gen/config"
 	"github.com/conflux-fans/rpc-spec-gen/parser/rust"
 	"github.com/go-openapi/spec"
+	"github.com/sirupsen/logrus"
+	prefixed "github.com/x-cray/logrus-prefixed-formatter"
 )
+
+var logger = &logrus.Logger{
+	Out:   os.Stderr,
+	Level: logrus.DebugLevel,
+	Formatter: &prefixed.TextFormatter{
+		// DisableColors:   true,
+		TimestampFormat: "2006-01-02 15:04:05",
+		FullTimestamp:   true,
+		ForceFormatting: true,
+	},
+}
 
 const (
-	schemaRefRoot = "#/components/schemas/"
+	SchemaRefRoot = "#/components/schemas/"
 )
 
-var basetypeSchemas = map[string]*spec.Schema{
+var BasetypeSchemas = map[string]*spec.Schema{
 	"bool": {
 		SchemaProps: spec.SchemaProps{
 			Type: spec.StringOrArray{"boolean"},
@@ -135,14 +151,36 @@ var basetypeSchemas = map[string]*spec.Schema{
 	},
 }
 
-var customSchemas = map[string]*spec.Schema{
+var CustomSchemas = map[string]*spec.Schema{
+	"crate::rpc::types::eth::BlockNumber": {
+		SchemaProps: spec.SchemaProps{
+			Title: "Block Number or Tags",
+			OneOf: []spec.Schema{
+				{
+					SchemaProps: spec.SchemaProps{
+						Title: "U64",
+						Ref:   spec.MustCreateRef(SchemaRefRoot + "U64"),
+					},
+				},
+				{
+					SchemaProps: spec.SchemaProps{
+						Enum: []interface{}{
+							"earliest",
+							"latest",
+							"pending",
+						},
+					},
+				},
+			},
+		},
+	},
 	// "BlockNumber": {
 	// 	SchemaProps: spec.SchemaProps{
 	// 		OneOf: []spec.Schema{
 	// 			{
 	// 				SchemaProps: spec.SchemaProps{
 	// 					Title: "Block number",
-	// 					Ref:   spec.MustCreateRef(schemaRefRoot + "U64"),
+	// 					Ref:   spec.MustCreateRef(SchemaRefRoot + "U64"),
 	// 				},
 	// 			},
 	// 			{
@@ -157,7 +195,18 @@ var customSchemas = map[string]*spec.Schema{
 	// "EpochNumber": {},
 }
 
-func mustGetBasetypeSchemasByUseType(useType rust.UseType) *spec.Schema {
+var SchemaPostHooks = map[string]func(schema *spec.Schema){
+	"crate::rpc::types::eth::Block": func(schema *spec.Schema) {
+		var propSchema spec.Schema
+		propSchema.Title = "sha3uncle"
+		propSchema.Ref = schema.Properties["unclesHash"].Ref
+		schema.Properties["sha3uncle"] = propSchema
+
+		delete(schema.Properties, "unclesHash")
+	},
+}
+
+func MustGetBasetypeSchemasByUseType(useType rust.UseType) *spec.Schema {
 
 	if useType.Name == "RpcAddress" {
 		time.Sleep(0)
@@ -168,7 +217,7 @@ func mustGetBasetypeSchemasByUseType(useType rust.UseType) *spec.Schema {
 		logger.Panicf("meta is nil for useType: %s", useType.String())
 	}
 	if meta.IsBaseType() {
-		if v, ok := basetypeSchemas[useType.Name]; ok {
+		if v, ok := BasetypeSchemas[useType.Name]; ok {
 			return v
 		}
 		logger.Panicf("basetype schemas not found for useType: %s", useType.String())
@@ -177,26 +226,26 @@ func mustGetBasetypeSchemasByUseType(useType rust.UseType) *spec.Schema {
 	return nil
 }
 
-func getSchemaSaveRelativePath(space string, schemaFullName string) string {
+func GetSchemaSaveRelativePath(space string, schemaFullName string) string {
 	return path.Join(space, strings.Join(strings.Split(schemaFullName, "::"), "/")+".json")
 }
 
-func getSchemaSavePath(space string, schemaFullName string) string {
-	return path.Join(config.GetConfig().SchemaRootPath, getSchemaSaveRelativePath(space, schemaFullName))
+func GetSchemaSavePath(space string, schemaFullName string) string {
+	return path.Join(config.GetConfig().SchemaRootPath, GetSchemaSaveRelativePath(space, schemaFullName))
 }
 
-func getUseTypeRefSchema(useType rust.UseType) spec.Schema {
+func GetUseTypeRefSchema(useType rust.UseType) spec.Schema {
 	s := spec.Schema{}
 
 	schemaName := strings.Join(useType.ModPath, "__") + "__" + useType.Name
 	schemaName = strings.TrimPrefix(schemaName, "__")
-	s.Ref = spec.MustCreateRef(schemaRefRoot + schemaName)
+	s.Ref = spec.MustCreateRef(SchemaRefRoot + schemaName)
 	return s
 }
 
-func parseSchemaRefToUseType(ref string) rust.UseType {
+func ParseSchemaRefToUseType(ref string) rust.UseType {
 
-	fullUseType := strings.TrimPrefix(ref, schemaRefRoot)
+	fullUseType := strings.TrimPrefix(ref, SchemaRefRoot)
 	matchs := regexp.MustCompile(`(.*)__(.*)`).FindStringSubmatch(fullUseType)
 
 	if len(matchs) != 3 {
@@ -212,4 +261,28 @@ func parseSchemaRefToUseType(ref string) rust.UseType {
 		ModPath: strings.Split(fullName, "__"),
 		Name:    matchs[2],
 	}
+}
+
+func MustLoadSchema(space string, useType rust.UseType) *spec.Schema {
+
+	if useType.IsBaseType() {
+		return MustGetBasetypeSchemasByUseType(useType)
+	}
+
+	savePath := GetSchemaSavePath(space, useType.String())
+	content, e := ioutil.ReadFile(savePath)
+
+	if e != nil {
+		panic(e)
+	}
+
+	schema := spec.Schema{}
+	if e := json.Unmarshal(content, &schema); e != nil {
+		panic(e)
+	}
+
+	j, _ := json.MarshalIndent(schema, "", "  ")
+
+	logger.WithField("schema", string(j)).Debug("load schema")
+	return &schema
 }

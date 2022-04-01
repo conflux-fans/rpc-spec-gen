@@ -17,5 +17,9 @@ TODO:
 4. 默认枚举camelcase
 5. param nullable 问题
 6. block.transaction type array V
-7. 去掉trait中的前后注释
+7. 去掉trait中的前后注释 V
 8. 命令行化，支持输出保存路径
+9. info V
+10. openrpc V
+11. 配置 summary 和 result name
+12. block.sha3uncle rename标签识别
