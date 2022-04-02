@@ -5,6 +5,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/conflux-fans/rpc-spec-gen/utils"
 	"github.com/sirupsen/logrus"
 )
 
@@ -56,6 +57,7 @@ func (r Struct) Parse() StructParsed {
 	}
 
 	sComment, sName, sBody := strings.TrimSpace(structFinded[1]), strings.TrimSpace(structFinded[2]), strings.TrimSpace(structFinded[3])
+	sComment = utils.CleanComment(sComment)
 
 	fmt.Printf("comment %v\nhead %#v\nbody %#v\n", sComment, sName, sBody)
 
@@ -73,6 +75,7 @@ func (r Struct) Parse() StructParsed {
 		if fComment == "" && fName == "" && fType == "" {
 			fComment, fName, fType = strings.TrimSpace(field[4]), strings.TrimSpace(field[5]), RustType(field[6])
 		}
+		fComment = utils.CleanComment(fComment)
 
 		fields[i] = FieldParsed{fComment, fName, fType.Parse()}
 		logger.WithFields(logrus.Fields{

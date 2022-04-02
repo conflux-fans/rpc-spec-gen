@@ -1,6 +1,8 @@
 package specconfig
 
-var ethMethodConfigs map[string]MethodConfig = map[string]MethodConfig{
+import "github.com/conflux-fans/rpc-spec-gen/code_gen/openrpc/types"
+
+var ethMethodConfigs map[string]*MethodConfig = map[string]*MethodConfig{
 
 	"web3_clientVersion": {
 		Summary:     "current client version",
@@ -207,9 +209,35 @@ var ethMethodConfigs map[string]MethodConfig = map[string]MethodConfig{
 	},
 }
 
+var ethServerConfig = []*types.Server{
+	{
+		Name:    "eSpace mainnet RPC",
+		URL:     "https://evm.confluxrpc.com",
+		Summary: "The mainnet RPC server for Conflux eSpace. chainId: 1030",
+	},
+	{
+		Name:    "eSpace testnet RPC",
+		URL:     "https://evmtestnet.confluxrpc.com",
+		Summary: "The testnet RPC server for Conflux eSpace. chainId: 71",
+	},
+}
+
+var ethInfo = types.Info{
+	Version:     "0.1.0",
+	Description: "A specification of the standard interface of Ethereum clients.",
+	Title:       "Ethereum JSON-RPC Specification",
+	License: &types.License{
+		Name: "CC0-1.0",
+		URL:  "https://creativecommons.org/publicdomain/zero/1.0/legalcode",
+	},
+}
+
 func getEthSpaceSpecConfig() SpecConfig {
 	s := SpecConfig{}
 	s.Space = "eth_space"
+	// s.TraitName = "Eth"
+	s.Info = &ethInfo
 	s.Methods = ethMethodConfigs
+	s.Servers = ethServerConfig
 	return s
 }

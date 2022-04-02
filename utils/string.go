@@ -31,3 +31,9 @@ func UnderScoreCase2CamelCase(str string, firstUpper bool) string {
 	}
 	return strings.ToLower(str[:1]) + str[1:]
 }
+
+func CleanComment(comment string) string {
+	comment = regexp.MustCompile(`#.*|///|\n`).ReplaceAllString(comment, "")
+	comment = strings.TrimSpace(comment)
+	return comment
+}

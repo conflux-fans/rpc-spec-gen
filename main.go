@@ -52,7 +52,7 @@ func main() {
 		doc := openrpc.GenDocTempalte(trait, parsed.Uses)
 		openrpc.SaveDocTemplate(doc, space)
 
-		doc = openrpc.CompleteDoc(doc, space)
-		openrpc.SaveDoc(doc, space)
+		doc = openrpc.CompleteDoc(doc, space, trait.Name)
+		openrpc.SaveDoc(doc, space, trait.Name)
 	}
 }

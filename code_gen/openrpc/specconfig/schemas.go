@@ -164,6 +164,39 @@ var CustomSchemas = map[string]*spec.Schema{
 				},
 				{
 					SchemaProps: spec.SchemaProps{
+						Type:     spec.StringOrArray{"object"},
+						Title:    "BlockHash",
+						Required: []string{"blockHash"},
+						Properties: map[string]spec.Schema{
+							"blockHash": {
+								SchemaProps: spec.SchemaProps{
+									Ref: spec.MustCreateRef(SchemaRefRoot + "H256"),
+								},
+							},
+							"requireCanonical": {
+								SchemaProps: spec.SchemaProps{
+									Type: spec.StringOrArray{"boolean"},
+								},
+							},
+						},
+					},
+				},
+				{
+					SchemaProps: spec.SchemaProps{
+						Type:     spec.StringOrArray{"object"},
+						Title:    "BlockNumber",
+						Required: []string{"blockNumber"},
+						Properties: map[string]spec.Schema{
+							"blockNumber": {
+								SchemaProps: spec.SchemaProps{
+									Ref: spec.MustCreateRef(SchemaRefRoot + "U64"),
+								},
+							},
+						},
+					},
+				},
+				{
+					SchemaProps: spec.SchemaProps{
 						Enum: []interface{}{
 							"earliest",
 							"latest",

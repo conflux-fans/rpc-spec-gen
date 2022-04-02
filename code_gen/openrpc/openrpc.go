@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/conflux-fans/rpc-spec-gen/code_gen/openrpc/specconfig"
+	"github.com/conflux-fans/rpc-spec-gen/code_gen/openrpc/types"
 	"github.com/conflux-fans/rpc-spec-gen/config"
 	"github.com/conflux-fans/rpc-spec-gen/parser/rust"
 	"github.com/conflux-fans/rpc-spec-gen/utils"
@@ -237,11 +238,11 @@ func SaveSchemas(useTypes []rust.UseType, space string) {
 
 // - 方法的参数和返回值都是schema的ref，放到methods.params和methods.result
 // - 查看是否有已生成的scheme，没有则创建
-func GenMethod(funcParsed rust.FuncParsed, useTypePool []rust.UseType) *Method {
-	var method Method
+func GenMethod(funcParsed rust.FuncParsed, useTypePool []rust.UseType) *types.Method {
+	var method types.Method
 	method.Summary = funcParsed.Comment
 	method.Name = funcParsed.RpcMethod
-	method.Params = make([]*ContentDescriptor, len(funcParsed.Params))
+	method.Params = make([]*types.ContentDescriptor, len(funcParsed.Params))
 	for i, param := range funcParsed.Params {
 		// ut := mustFindUseType(param.Type.InnestCoreTypeName(), useTypes)
 		// method.Params[i] = getParamContentDescriptor(*ut, param)
@@ -264,30 +265,30 @@ func GenMethod(funcParsed rust.FuncParsed, useTypePool []rust.UseType) *Method {
 	return &method
 }
 
-func getParamContentDescriptor(p rust.ParamParsed, useTypePool []rust.UseType) *ContentDescriptor {
+func getParamContentDescriptor(p rust.ParamParsed, useTypePool []rust.UseType) *types.ContentDescriptor {
 
 	u := mustFindUseType(p.Type.InnestCoreTypeName(), useTypePool)
 	refSchema := specconfig.GetUseTypeRefSchema(*u)
 
-	c := Content{
+	c := types.Content{
 		Name:     p.Name,
 		Required: !p.Type.IsOption,
 		Schema:   *genSchemaForParsedType(p.Type, refSchema),
 	}
 
-	return &ContentDescriptor{Content: c}
+	return &types.ContentDescriptor{Content: c}
 }
 
-func getResultContentDescriptor(p rust.ReturnParsed, useTypePool []rust.UseType) *ContentDescriptor {
+func getResultContentDescriptor(p rust.ReturnParsed, useTypePool []rust.UseType) *types.ContentDescriptor {
 	u := mustFindUseType(p.Type.InnestCoreTypeName(), useTypePool)
 	refSchema := specconfig.GetUseTypeRefSchema(*u)
 
-	c := Content{
+	c := types.Content{
 		Name:   p.Name,
 		Schema: *genSchemaForParsedType(p.Type, refSchema),
 	}
 
-	return &ContentDescriptor{Content: c}
+	return &types.ContentDescriptor{Content: c}
 }
 
 func genSchemaForParsedType(t rust.TypeParsed, coreRefSchema spec.Schema) *spec.Schema {
@@ -324,8 +325,8 @@ func genSchemaForParsedType(t rust.TypeParsed, coreRefSchema spec.Schema) *spec.
 	return nil
 }
 
-func GenMethods(traitParsed rust.TraitParsed, useTypes []rust.UseType) []*Method {
-	var methods []*Method
+func GenMethods(traitParsed rust.TraitParsed, useTypes []rust.UseType) []*types.Method {
+	var methods []*types.Method
 	for _, funcParsed := range traitParsed.Funcs {
 		methods = append(methods, GenMethod(funcParsed, useTypes))
 	}
@@ -334,9 +335,9 @@ func GenMethods(traitParsed rust.TraitParsed, useTypes []rust.UseType) []*Method
 
 // uses -> schemas
 // traits -> funcs -> methods
-func GenDocTempalte(trait rust.TraitParsed, useTypes []rust.UseType) OpenRPCSpec1 {
+func GenDocTempalte(trait rust.TraitParsed, useTypes []rust.UseType) types.OpenRPCSpec1 {
 
-	doc := OpenRPCSpec1{}
+	doc := types.OpenRPCSpec1{}
 	doc.Info.Title = trait.Name
 	doc.Info.Description = trait.Comment
 	doc.Methods = GenMethods(trait, useTypes)
@@ -344,14 +345,14 @@ func GenDocTempalte(trait rust.TraitParsed, useTypes []rust.UseType) OpenRPCSpec
 	return doc
 }
 
-func SaveDocTemplate(doc OpenRPCSpec1, space string) {
+func SaveDocTemplate(doc types.OpenRPCSpec1, space string) {
 	docPath := path.Join(config.GetConfig().DocTemplateRootPath, space, doc.Info.Title+".json")
 	j, _ := json.MarshalIndent(doc, "", " ")
 	saveFile(docPath, j)
 }
 
-func SaveDoc(doc OpenRPCSpec1, space string) {
-	docPath := path.Join(config.GetConfig().DocRootPath, space, doc.Info.Title+".json")
+func SaveDoc(doc types.OpenRPCSpec1, space string, traitName string) {
+	docPath := path.Join(config.GetConfig().DocRootPath, space, traitName+".json")
 	j, _ := json.MarshalIndent(doc, "", " ")
 	saveFile(docPath, j)
 }

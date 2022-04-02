@@ -4,6 +4,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/conflux-fans/rpc-spec-gen/utils"
 	"github.com/sirupsen/logrus"
 )
 
@@ -31,7 +32,7 @@ func (e Enum) Parse() EnumParsed {
 	}
 
 	sComment, sName, sBody := strings.TrimSpace(finds[1]), strings.TrimSpace(finds[2]), strings.TrimSpace(finds[3])
-
+	sComment = utils.CleanComment(sComment)
 	// fmt.Printf("comment %v\nhead %#v\nbody %#v\n", sComment, sName, sBody)
 
 	iRe := regexp.MustCompile(`(?Um)(\/\/\/.*|^)\s*(\w+|\w+\((.*)\)),`)
@@ -41,6 +42,7 @@ func (e Enum) Parse() EnumParsed {
 	for idx, item := range iFinds {
 		// fmt.Printf("item %#v\n", item)
 		iComment, iValue := strings.TrimSpace(item[1]), strings.TrimSpace(item[2])
+		iComment = utils.CleanComment(iComment)
 
 		var tupleParams []TypeParsed
 		rawParams := item[3]
