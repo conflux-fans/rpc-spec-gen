@@ -1,4 +1,4 @@
-package openrpc
+package types
 
 import (
 	"github.com/go-openapi/spec"

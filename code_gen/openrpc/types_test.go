@@ -6,22 +6,23 @@ import (
 	"os"
 	"testing"
 
+	"github.com/conflux-fans/rpc-spec-gen/code_gen/openrpc/types"
 	"github.com/sirupsen/logrus"
 	prefixed "github.com/x-cray/logrus-prefixed-formatter"
 )
 
 func TestMarshalStructPtr(t *testing.T) {
-	tag := Tag{}
+	tag := types.Tag{}
 	j, _ := json.MarshalIndent(tag, "", "  ")
 	fmt.Printf("%s\n", j)
 
-	m := Method{}
+	m := types.Method{}
 	j, _ = json.MarshalIndent(m, "", "  ")
 	fmt.Printf("%s\n", j)
 }
 
 func TestLogrus(t *testing.T) {
-	c := Contact{
+	c := types.Contact{
 		Name:  "SOPHIA",
 		Email: "SOPHIA@163.com",
 	}

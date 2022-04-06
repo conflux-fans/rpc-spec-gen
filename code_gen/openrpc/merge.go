@@ -2,15 +2,17 @@ package openrpc
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/conflux-fans/rpc-spec-gen/code_gen/openrpc/specconfig"
+	"github.com/conflux-fans/rpc-spec-gen/code_gen/openrpc/types"
 	"github.com/conflux-fans/rpc-spec-gen/parser/rust"
 	"github.com/conflux-fans/rpc-spec-gen/utils"
 	"github.com/go-openapi/spec"
 	"github.com/sirupsen/logrus"
 )
 
-func CompleteDoc(doc OpenRPCSpec1, space string) OpenRPCSpec1 {
+func CompleteDoc(doc types.OpenRPCSpec1, space string, traitName string) types.OpenRPCSpec1 {
 
 	if doc.OpenRPC == "" {
 		doc.OpenRPC = "1.2.6"
@@ -18,23 +20,51 @@ func CompleteDoc(doc OpenRPCSpec1, space string) OpenRPCSpec1 {
 
 	if doc.Info.Version == "" {
 		doc.Info.Version = "0.1.0"
+
 	}
 
 	if doc.Components == nil {
-		doc.Components = &Components{}
+		doc.Components = &types.Components{}
 	}
 
 	if doc.Components.Schemas == nil {
 		doc.Components.Schemas = make(map[string]*spec.Schema)
 	}
 
-	// 根据配置替换 method summary 和 result name
-	specConfig := specconfig.GetSpecConfig(space)
-	for _, m := range doc.Methods {
-		methodConfig := specConfig.Methods[m.Name]
-		m.Summary = methodConfig.Summary
-		m.Description = methodConfig.Description
-		m.Result.Name = methodConfig.ResultName
+	// 根据配置替换 info, servers, method summary, params 和 result name
+	if specConfig, ok := specconfig.GetSpecConfig(space); ok {
+		if specConfig.Info != nil {
+			doc.Info = *specConfig.Info
+		}
+		doc.Info.Title = fmt.Sprintf("%v for namespace %v", doc.Info.Title, traitName)
+
+		doc.Servers = append(doc.Servers, specConfig.Servers...)
+
+		for _, m := range doc.Methods {
+			methodConfig := specConfig.Methods[m.Name]
+			if methodConfig == nil {
+				continue
+			}
+			if methodConfig.Summary != "" {
+				m.Summary = methodConfig.Summary
+			}
+			if methodConfig.Description != "" {
+				m.Description = methodConfig.Description
+			}
+
+			if methodConfig.ParamNames != nil {
+				if len(methodConfig.ParamNames) != len(m.Params) {
+					panic(fmt.Sprintf("method %v param names config is not equal to params", m.Name))
+				}
+				for i := range m.Params {
+					m.Params[i].Name = methodConfig.ParamNames[i]
+				}
+			}
+
+			if methodConfig.ResultName != "" {
+				m.Result.Name = methodConfig.ResultName
+			}
+		}
 	}
 
 	// 递归查找所有schema及子项相关schema
@@ -60,7 +90,7 @@ func CompleteDoc(doc OpenRPCSpec1, space string) OpenRPCSpec1 {
 	return doc
 }
 
-func fillComponent(comp *Components, schema *spec.Schema, space string) {
+func fillComponent(comp *types.Components, schema *spec.Schema, space string) {
 	if schema.Ref.String() == "" {
 		return
 	}
@@ -174,7 +204,7 @@ func getRelatedSchemas(s spec.Schema, space string) []*spec.Schema {
 }
 
 // 不会递归查找子项schema
-func getDocAllSchemas(doc OpenRPCSpec1, space string) []*spec.Schema {
+func getDocAllSchemas(doc types.OpenRPCSpec1, space string) []*spec.Schema {
 	// 查找所有schema
 	var schemas []*spec.Schema
 	for i := range doc.Methods {

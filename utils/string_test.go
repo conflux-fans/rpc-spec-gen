@@ -2,7 +2,6 @@ package utils
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 )
 
@@ -32,11 +31,8 @@ func TestUSC2CC(t *testing.T) {
 	}
 }
 
-func TestA(t *testing.T) {
-	sampleRegexp := regexp.MustCompile(`(?P\w+):(?P[0-9]\d{1,3})`)
-
-	input := "The names are John:21, Simon:23, Mike:19"
-
-	result := sampleRegexp.ReplaceAllString(input, "$Age:$Name")
-	fmt.Println(string(result))
+func TestCleanComment(t *testing.T) {
+	c := "Block representation\n#[derive(Debug, Serialize)]\n#[serde(rename_all = \"camelCase\")]"
+	c = CleanComment(c)
+	fmt.Printf("%s\n", c)
 }

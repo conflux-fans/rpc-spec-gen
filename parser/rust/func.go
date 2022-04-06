@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+
+	"github.com/conflux-fans/rpc-spec-gen/utils"
 )
 
 type Func string
@@ -34,6 +36,7 @@ func (r Func) Parse() FuncParsed {
 
 	// Note: returns 是不包含最外围泛型的结果，如RpcResult<H256>，这里只取H256
 	comment, rpcMethod, funcName, params, returns := funcFinded[1], funcFinded[2], funcFinded[3], funcFinded[4], funcFinded[5]
+	comment = utils.CleanComment(comment)
 	fmt.Printf("comment %v\nmethod %v\nfuncName %v\nparams %v\nreturns %v\n", comment, rpcMethod, funcName, params, returns)
 
 	splitParams := strings.Split(params, ",")
