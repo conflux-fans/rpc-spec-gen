@@ -244,23 +244,10 @@ func GenMethod(funcParsed rust.FuncParsed, useTypePool []rust.UseType) *types.Me
 	method.Name = funcParsed.RpcMethod
 	method.Params = make([]*types.ContentDescriptor, len(funcParsed.Params))
 	for i, param := range funcParsed.Params {
-		// ut := mustFindUseType(param.Type.InnestCoreTypeName(), useTypes)
-		// method.Params[i] = getParamContentDescriptor(*ut, param)
 		method.Params[i] = getParamContentDescriptor(param, useTypePool)
 	}
-
-	// ut := findUseType(funcParsed.Return.Type.InnestCoreTypeName(), useTypePool)
-
-	// if ut == nil {
-	// 	logger.WithFields(logrus.Fields{
-	// 		"Func Method": funcParsed.RpcMethod,
-	// 		"Name":        funcParsed.Return.Type.Name,
-	// 		"Use Types":   useTypePool,
-	// 	}).Panic("not found use type")
-	// }
-
-	// method.Result = getResultContentDescriptor(*ut, funcParsed.Return)
 	method.Result = getResultContentDescriptor(funcParsed.Return, useTypePool)
+	method.Result.Name = funcParsed.RpcMethod + "_result"
 
 	return &method
 }
@@ -270,8 +257,13 @@ func getParamContentDescriptor(p rust.ParamParsed, useTypePool []rust.UseType) *
 	u := mustFindUseType(p.Type.InnestCoreTypeName(), useTypePool)
 	refSchema := specconfig.GetUseTypeRefSchema(*u)
 
+	pname := p.Name
+	if pname == "-" || pname == "_" || p.Name == "" {
+		pname = p.Type.DefaultDefineName()
+	}
+
 	c := types.Content{
-		Name:     p.Name,
+		Name:     pname,
 		Required: !p.Type.IsOption,
 		Schema:   *genSchemaForParsedType(p.Type, refSchema),
 	}

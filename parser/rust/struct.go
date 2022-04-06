@@ -46,6 +46,15 @@ func (t *TypeParsed) InnestCoreTypeName() string {
 	return t.Core.InnestCoreTypeName()
 }
 
+// Default define name for params if param name is not specified
+func (t *TypeParsed) DefaultDefineName() string {
+	core := strings.ToLower(t.InnestCoreTypeName())
+	if t.IsArray {
+		return core + "s"
+	}
+	return core
+}
+
 func (r Struct) Parse() StructParsed {
 	structReg := regexp.MustCompile(`(?Us)(.*)pub struct (.*)\{(.*)\}`)
 	structFinded := structReg.FindStringSubmatch(string(r))

@@ -12,6 +12,7 @@ type SpecConfig struct {
 
 type MethodConfig struct {
 	Summary     string
+	ParamNames  []string
 	ResultName  string
 	Description string
 }

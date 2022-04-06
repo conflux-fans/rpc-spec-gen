@@ -31,7 +31,7 @@ func CompleteDoc(doc types.OpenRPCSpec1, space string, traitName string) types.O
 		doc.Components.Schemas = make(map[string]*spec.Schema)
 	}
 
-	// 根据配置替换 info, servers, method summary 和 result name
+	// 根据配置替换 info, servers, method summary, params 和 result name
 	if specConfig, ok := specconfig.GetSpecConfig(space); ok {
 		if specConfig.Info != nil {
 			doc.Info = *specConfig.Info
@@ -45,9 +45,25 @@ func CompleteDoc(doc types.OpenRPCSpec1, space string, traitName string) types.O
 			if methodConfig == nil {
 				continue
 			}
-			m.Summary = methodConfig.Summary
-			m.Description = methodConfig.Description
-			m.Result.Name = methodConfig.ResultName
+			if methodConfig.Summary != "" {
+				m.Summary = methodConfig.Summary
+			}
+			if methodConfig.Description != "" {
+				m.Description = methodConfig.Description
+			}
+
+			if methodConfig.ParamNames != nil {
+				if len(methodConfig.ParamNames) != len(m.Params) {
+					panic(fmt.Sprintf("method %v param names config is not equal to params", m.Name))
+				}
+				for i := range m.Params {
+					m.Params[i].Name = methodConfig.ParamNames[i]
+				}
+			}
+
+			if methodConfig.ResultName != "" {
+				m.Result.Name = methodConfig.ResultName
+			}
 		}
 	}
 
