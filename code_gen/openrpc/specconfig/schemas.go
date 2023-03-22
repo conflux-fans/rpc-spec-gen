@@ -60,6 +60,12 @@ var BasetypeSchemas = map[string]*spec.Schema{
 			Pattern: "^0x[0-9,a-f,A-F]{16}$",
 		},
 	},
+	"H128": {
+		SchemaProps: spec.SchemaProps{
+			Type:    spec.StringOrArray{"string"},
+			Pattern: "^0x[0-9,a-f,A-F]{28}$",
+		},
+	},
 	"H160": {
 		SchemaProps: spec.SchemaProps{
 			Type:    spec.StringOrArray{"string"},

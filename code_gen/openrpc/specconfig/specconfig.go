@@ -22,6 +22,7 @@ var specConfigs map[string]*SpecConfig = make(map[string]*SpecConfig)
 func init() {
 	cs := []SpecConfig{
 		getEthSpaceSpecConfig(),
+		getCfxSpaceSpecConfig(),
 	}
 
 	for _, c := range cs {

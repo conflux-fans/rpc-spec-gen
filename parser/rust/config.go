@@ -42,6 +42,7 @@ var FolderPathOfMod = map[string]string{
 // Struct exist in rust file path
 var RustUseTypeMetas map[string]RustUseTypeMeta = map[string]RustUseTypeMeta{
 	"H64":         {isBaseType: true},
+	"H128":        {isBaseType: true},
 	"H160":        {isBaseType: true},
 	"H256":        {isBaseType: true},
 	"H512":        {isBaseType: true},

@@ -16,7 +16,7 @@ var config = struct {
 	RustRootPath  string
 	TraitRootPath string
 }{
-	RustRootPath:  "/Users/wangdayong/myspace/mywork/conflux-rust/",
+	RustRootPath:  "/Users/dayong/myspace/mywork/conflux-rust/",
 	TraitRootPath: "client/src/rpc/traits/",
 }
 
@@ -35,13 +35,17 @@ var logger = &logrus.Logger{
 // V 解析出字段类型
 // V 生成 open rpc 方法描述文件
 func main() {
-	traitsFile := "/Users/wangdayong/myspace/mywork/conflux-rust/client/src/rpc/traits/cfx_space/cfx_clean.rs1"
+	// traitsFile := "/Users/wangdayong/myspace/mywork/conflux-rust/client/src/rpc/traits/cfx_space/cfx.rs"
+	traitsFile := "/Users/dayong/myspace/mywork/conflux-rust/client/src/rpc/traits/cfx_space/cfx.rs"
 
-	traitsFile = "/Users/wangdayong/myspace/mywork/conflux-rust/client/src/rpc/traits/eth_space/eth.rs"
+	// traitsFile = "/Users/wangdayong/myspace/mywork/conflux-rust/client/src/rpc/traits/eth_space/eth.rs"
 
 	space := path.Join(traitsFile, "..")[len(config.RustRootPath+config.TraitRootPath):]
 
-	traits, _ := ioutil.ReadFile(traitsFile)
+	traits, err := ioutil.ReadFile(traitsFile)
+	if err != nil {
+		panic(err)
+	}
 	parsed := rust.TraitsFile(traits).Parse()
 
 	j, _ := json.MarshalIndent(rust.TraitsFile(traits).Parse(), "", " ")

@@ -11,7 +11,7 @@ var config Config
 
 func init() {
 	config = Config{
-		RustRootPath:        "/Users/wangdayong/myspace/mywork/conflux-rust",
+		RustRootPath:        "/Users/dayong/myspace/mywork/conflux-rust",
 		SchemaRootPath:      "./output/schemas",
 		DocRootPath:         "./output/doc",
 		DocTemplateRootPath: "./output/doc_template",
