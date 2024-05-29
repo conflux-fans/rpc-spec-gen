@@ -79,7 +79,7 @@ func CompleteDoc(doc types.OpenRPCSpec1, space string, traitName string) types.O
 	}
 
 	j, _ := json.MarshalIndent(doc, "", "  ")
-	logger.WithField("doc", string(j)).Print("components completed")
+	logrus.WithField("doc", string(j)).Print("components completed")
 
 	// 重置schema的ref为name
 	schemas = getDocAllSchemas(doc, space)
@@ -99,7 +99,7 @@ func fillComponent(comp *types.Components, schema *spec.Schema, space string) {
 
 	meta, ok := rust.GetUseTypeMeta(useType)
 	if !ok {
-		logger.WithFields(logrus.Fields{
+		logrus.WithFields(logrus.Fields{
 			"useType":    useType.String(),
 			"schema ref": schema.Ref.String(),
 		}).Panic("meta is nil")
@@ -172,14 +172,14 @@ func getRelatedSchemas(s spec.Schema, space string) []*spec.Schema {
 	if s.Properties != nil {
 		for k, v := range s.Properties {
 			result := getRelatedSchemas(v, space)
-			j, _ := json.MarshalIndent(result, "", "  ")
-			logger.WithFields(logrus.Fields{
+			// j, _ := json.MarshalIndent(result, "", "  ")
+			logrus.WithFields(logrus.Fields{
 				"schema": k,
-				"result": string(j),
+				// "result": string(j),
 			}).Debug("getRelatedSchemas")
 			schemas = append(schemas, result...)
-			j, _ = json.MarshalIndent(schemas, "", "  ")
-			logger.WithField("schemas", string(j)).Debug("append schemas")
+			// j, _ = json.MarshalIndent(schemas, "", "  ")
+			// logrus.WithField("schemas", string(j)).Debug("append schemas")
 		}
 	}
 
@@ -189,10 +189,10 @@ func getRelatedSchemas(s spec.Schema, space string) []*spec.Schema {
 		realSchema := specconfig.MustLoadSchema(space, useType)
 
 		if realSchema == nil {
-			logger.WithField("useType", useType).Panic("not found schema")
+			logrus.WithField("useType", useType).Panic("not found schema")
 		}
 
-		logger.WithFields(logrus.Fields{
+		logrus.WithFields(logrus.Fields{
 			"space":      useType.String(),
 			"realSchema": utils.MustJsonPretty(realSchema),
 			"result":     getRelatedSchemas(*realSchema, space),

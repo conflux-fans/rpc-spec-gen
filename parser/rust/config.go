@@ -30,13 +30,13 @@ func (r *RustUseTypeMeta) InFilePath() string {
 
 // mod path 到 file path 的映射, 如果 RustUseTypeMetas 中找不到，从 mode path 映射中遍历解析文件查找（只需要在init时解析一遍）
 var FolderPathOfMod = map[string]string{
-	"crate::rpc::types":         "client/src/rpc/types/",
-	"crate::rpc::types::pos":    "client/src/rpc/types/pos/",
-	"diem_types":                "core/src/pos/types/src/",
-	"cfxcore::transaction_pool": "core/src/transaction_pool/",
-	"primitives":                "primitives/src/",
+	"crate::rpc::types":         "crates/client/src/rpc/types/",
+	"crate::rpc::types::pos":    "crates/client/src/rpc/types/pos/",
+	"diem_types":                "crates/cfxcore/core/src/pos/types/src/",
+	"cfxcore::transaction_pool": "crates/cfxcore/core/src/transaction_pool/",
+	"primitives":                "crates/primitives/src/",
 
-	"crate::rpc::types::eth": "client/src/rpc/types/eth/",
+	"crate::rpc::types::eth": "crates/client/src/rpc/types/eth/",
 }
 
 // Struct exist in rust file path
@@ -54,6 +54,7 @@ var RustUseTypeMetas map[string]RustUseTypeMeta = map[string]RustUseTypeMeta{
 	"bool":        {isBaseType: true},
 	"u64":         {isBaseType: true},
 	"u8":          {isBaseType: true},
+	"f64":         {isBaseType: true},
 	"usize":       {isBaseType: true},
 	"RpcAddress":  {isBaseType: true},
 	"Address":     {isBaseType: true},
@@ -109,14 +110,17 @@ var RustUseTypeMetas map[string]RustUseTypeMeta = map[string]RustUseTypeMeta{
 	// "diem_types::ledger_info::LedgerInfoWithV0":         {file: "core/src/pos/types/src/ledger_info.rs"},
 	// "diem_types::block_info::PivotBlockDecision":   {file: "core/src/pos/types/src/block_info.rs"},
 
-	"super::Decision": {file: "client/src/rpc/types/pos/decision.rs"},
+	"super::Decision": {file: "crates/client/src/rpc/types/pos/decision.rs"},
 	"crate::validator_verifier::ValidatorVerifier": {file: "core/src/pos/types/src/validator_verifier.rs"},
 
-	"super::Transaction": {file: "client/src/rpc/types/transaction.rs"},
-	"cfx_types::Space":   {file: "cfx_types/src/lib.rs"},
+	"super::Transaction": {file: "crates/client/src/rpc/types/transaction.rs"},
+	"cfx_types::Space":   {file: "crates/cfx_types/src/lib.rs"},
 	// "cfxcore::transaction_pool::TransactionStatus": {file: "core/src/transaction_pool/transaction_pool_inner.rs"},
-	"super::BlockTransactions": {file: "client/src/rpc/types/block.rs"},
-	"super::EpochNumber":       {file: "client/src/rpc/types/epoch_number.rs"},
+	"super::BlockTransactions": {file: "crates/client/src/rpc/types/block.rs"},
+	"super::EpochNumber":       {file: "crates/client/src/rpc/types/epoch_number.rs"},
+
+	"primitives::AccessList":     {file: "crates/primitives/src/transaction/mod.rs"},
+	"primitives::AccessListItem": {file: "crates/primitives/src/transaction/mod.rs"},
 }
 
 func GetUseTypeMeta(useType UseType) (*RustUseTypeMeta, bool) {
@@ -140,7 +144,7 @@ func GetUseTypeMeta(useType UseType) (*RustUseTypeMeta, bool) {
 		// 遍历解析文件夹下的文件
 		files, err := ioutil.ReadDir(folderPath)
 		if err != nil {
-			logger.WithField("folderPath", folderPath).WithError(err).Panic("read dir error")
+			logrus.WithField("folderPath", folderPath).WithError(err).Panic("read dir error")
 		}
 		for _, file := range files {
 			if file.IsDir() {
@@ -152,7 +156,7 @@ func GetUseTypeMeta(useType UseType) (*RustUseTypeMeta, bool) {
 				_content, err := ioutil.ReadFile(filePath)
 				content := NewSouceCode(string(_content))
 				if err != nil {
-					logger.WithField("filePath", filePath).WithError(err).Panic("read file error")
+					logrus.WithField("filePath", filePath).WithError(err).Panic("read file error")
 				}
 				structs, _ := content.GetStructs()
 				enums, _ := content.GetEnums()
@@ -210,7 +214,7 @@ func addTypeMetaIfNotExist(useType UseType, meta RustUseTypeMeta) {
 		time.Sleep(0)
 	}
 
-	logger.WithFields(logrus.Fields{
+	logrus.WithFields(logrus.Fields{
 		"useType": useType,
 		"meta":    meta,
 	}).Debug("addTypeMetaIfNotExist")

@@ -1,7 +1,6 @@
 package rust
 
 import (
-	"fmt"
 	"regexp"
 	"strings"
 
@@ -68,7 +67,8 @@ func (r Struct) Parse() StructParsed {
 	sComment, sName, sBody := strings.TrimSpace(structFinded[1]), strings.TrimSpace(structFinded[2]), strings.TrimSpace(structFinded[3])
 	sComment = utils.CleanComment(sComment)
 
-	fmt.Printf("comment %v\nhead %#v\nbody %#v\n", sComment, sName, sBody)
+	// logrus.WithField("comment %v\nhead %#v\nbody %#v\n", sComment, sName, sBody)
+	logrus.WithField("comment", sComment).WithField("head", sName).WithField("body", sBody).Debug("split struct content")
 
 	// TODO： 解析LedgerInfoWithV0不正确
 	// fieldReg := regexp.MustCompile(`(?Us)(.*)(?:pub|) (.*): (.*),`)
@@ -79,7 +79,8 @@ func (r Struct) Parse() StructParsed {
 
 	fields := make([]FieldParsed, len(fieldsFinded))
 	for i, field := range fieldsFinded {
-		fmt.Printf("field %#v\n", field)
+		// fmt.Printf("field %#v\n", field)
+		logrus.WithField("field", field).Debug("find struct field")
 		fComment, fName, fType := strings.TrimSpace(field[1]), strings.TrimSpace(field[2]), RustType(field[3])
 		if fComment == "" && fName == "" && fType == "" {
 			fComment, fName, fType = strings.TrimSpace(field[4]), strings.TrimSpace(field[5]), RustType(field[6])
@@ -87,7 +88,7 @@ func (r Struct) Parse() StructParsed {
 		fComment = utils.CleanComment(fComment)
 
 		fields[i] = FieldParsed{fComment, fName, fType.Parse()}
-		logger.WithFields(logrus.Fields{
+		logrus.WithFields(logrus.Fields{
 			"field":        field[0],
 			"field parsed": fields[i],
 		}).Debug("field parsed")
@@ -100,9 +101,9 @@ func (r RustType) Parse() (result TypeParsed) {
 
 	inner, e := re_AngleBrackets.FindStringMatch(string(r))
 	if e != nil {
-		logger.WithField("rustType", r).WithError(e).Panic("failed to found inner type")
+		logrus.WithField("rustType", r).WithError(e).Panic("failed to found inner type")
 	}
-	// logger.WithField("rustType", r).WithField("inner", inner).Debug("find inner")
+	// logrus.WithField("rustType", r).WithField("inner", inner).Debug("find inner")
 
 	if inner == nil {
 		result.Name = string(r)
@@ -121,6 +122,8 @@ func (r RustType) Parse() (result TypeParsed) {
 	case "Option":
 		result.IsOption = true
 	case "Vec":
+		result.IsArray = true
+	case "VecDeque":
 		result.IsArray = true
 	case "BoxFuture":
 		result.IsBoxFuture = true

@@ -49,6 +49,11 @@ var BasetypeSchemas = map[string]*spec.Schema{
 			Pattern: `^[1-9]\d*$`,
 		},
 	},
+	"f64": {
+		SchemaProps: spec.SchemaProps{
+			Type: spec.StringOrArray{"number"},
+		},
+	},
 	"usize": {
 		SchemaProps: spec.SchemaProps{
 			Type: spec.StringOrArray{"number"},
@@ -253,15 +258,15 @@ func MustGetBasetypeSchemasByUseType(useType rust.UseType) *spec.Schema {
 
 	meta, ok := rust.GetUseTypeMeta(useType)
 	if !ok {
-		logger.Panicf("meta is nil for useType: %s", useType.String())
+		logrus.Panicf("meta is nil for useType: %s", useType.String())
 	}
 	if meta.IsBaseType() {
 		if v, ok := BasetypeSchemas[useType.Name]; ok {
 			return v
 		}
-		logger.Panicf("basetype schemas not found for useType: %s", useType.String())
+		logrus.Panicf("basetype schemas not found for useType: %s", useType.String())
 	}
-	logger.Panicf("useType is not basetype: %s, alias %v", useType.String(), useType.Alias)
+	logrus.Panicf("useType is not basetype: %s, alias %v", useType.String(), useType.Alias)
 	return nil
 }
 
@@ -284,11 +289,13 @@ func GetUseTypeRefSchema(useType rust.UseType) spec.Schema {
 
 func ParseSchemaRefToUseType(ref string) rust.UseType {
 
+	logrus.WithField("ref", ref).Debug("parse schema ref to use type")
+
 	fullUseType := strings.TrimPrefix(ref, SchemaRefRoot)
 	matchs := regexp.MustCompile(`(.*)__(.*)`).FindStringSubmatch(fullUseType)
 
 	if len(matchs) != 3 {
-		logger.WithField("ref", ref).Debug("parse to a base type")
+		logrus.WithField("ref", ref).Debug("parse to a base type")
 		return rust.UseType{
 			Name: fullUseType,
 		}
@@ -320,8 +327,8 @@ func MustLoadSchema(space string, useType rust.UseType) *spec.Schema {
 		panic(e)
 	}
 
-	j, _ := json.MarshalIndent(schema, "", "  ")
+	// j, _ := json.MarshalIndent(schema, "", "  ")
 
-	logger.WithField("schema", string(j)).Debug("load schema")
+	// logrus.WithField("space", space).WithField("useType", useType).WithField("schema", string(j)).Debug("load schema")
 	return &schema
 }

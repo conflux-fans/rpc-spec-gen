@@ -2,6 +2,7 @@ package openrpc
 
 import (
 	"encoding/json"
+
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -41,7 +42,7 @@ func init() {
 
 func GenSchemaByStruct(structParsed rust.StructParsed, defaultModPath []string) *spec.Schema {
 
-	// logger.WithField("struct parsed", utils.MustJsonPretty(structParsed)).Info("GenSchemaByStruct")
+	// logrus.WithField("struct parsed", utils.MustJsonPretty(structParsed)).Info("GenSchemaByStruct")
 
 	if structParsed.Name == "CfxRpcLogFilter" {
 		time.Sleep(0)
@@ -89,7 +90,7 @@ func GenSchemaByEnum(enumParsed rust.EnumParsed, defaultModPath []string) *spec.
 		if field.IsTumple() {
 			hasTumple = true
 			if len(field.TupleParams) > 1 {
-				logger.WithField("field", field).Panic("enum tumple field should be custom")
+				logrus.WithField("field", field).Panic("enum tumple field should be custom")
 			}
 
 			refSchema := genObjRefSchema(field.TupleParams[0], defaultModPath)
@@ -118,13 +119,14 @@ func GenSchemaByEnum(enumParsed rust.EnumParsed, defaultModPath []string) *spec.
 }
 
 func GenSchemaByDefineType(defineType rust.RustType, defaultModPath []string) *spec.Schema {
+	logrus.WithField("defineType", defineType).WithField("defaultModPath", defaultModPath).Debug("GenSchemaByDefineType")
 	typeParsed := defineType.Parse()
 	return genObjRefSchema(typeParsed, defaultModPath)
 }
 
 func GenSchemas(useTypes []rust.UseType) map[string]*spec.Schema {
 
-	logger.WithField("useTypes", useTypes).Debug("GenSchemas")
+	logrus.WithField("useTypes", useTypes).Debug("GenSchemas")
 
 	for _, useType := range useTypes {
 		// get code file path by usetype
@@ -168,7 +170,7 @@ func GenSchemas(useTypes []rust.UseType) map[string]*spec.Schema {
 		// 获得code中的所有define types，以define type名为key，具体类型为value
 		defineTypes, _ := code.GetDefineTypes()
 
-		logger.WithFields(logrus.Fields{
+		logrus.WithFields(logrus.Fields{
 			"code":     code.Cleaned(),
 			"structs":  structs,
 			"enums":    enums,
@@ -177,7 +179,7 @@ func GenSchemas(useTypes []rust.UseType) map[string]*spec.Schema {
 
 		if _strcut, ok := structs[useType.Name]; ok {
 			fieldUsetypes := getStructFieldUseTypes(useType, us, structs, enums, defineTypes)
-			logger.WithFields(logrus.Fields{
+			logrus.WithFields(logrus.Fields{
 				"struct in useType": useType,
 				"filtered us":       fieldUsetypes,
 			}).Debug("filter struct field using use types")
@@ -187,7 +189,7 @@ func GenSchemas(useTypes []rust.UseType) map[string]*spec.Schema {
 			// continue
 		} else if _enum, ok := enums[useType.Name]; ok {
 			fieldUsetypes := getEnumFieldUseTypes(useType, us, enums, structs, defineTypes)
-			logger.WithFields(logrus.Fields{
+			logrus.WithFields(logrus.Fields{
 				"enum in useType": useType,
 				"filtered us":     fieldUsetypes,
 			}).Debug("filter struct field using use types")
@@ -200,6 +202,18 @@ func GenSchemas(useTypes []rust.UseType) map[string]*spec.Schema {
 			usetype2Schema[useType.String()] = GenSchemaByEnum(_enum.Parse(), useType.ModPath)
 			// continue
 		} else if _defineType, ok := defineTypes[useType.Name]; ok {
+			typeParsed := _defineType.Parse()
+			if typeParsed.IsArray {
+				// GenSchemas([]rust.UseType{typeParsed.Core})
+				// typeParsed := _defineType.Parse()
+				// // items = &spec.SchemaOrArray{Schema: genObjRefSchema(typeParsed.Core, defaultModPath)}
+				// fieldUseTypes := getVecUseTypes(typeParsed.Core, us, enums, structs, defineTypes)
+				// GenSchemas(fieldUseTypes)
+
+				innerUsetType := findFieldUseType(useType, typeParsed.InnestCoreTypeName(), us, enums, structs, defineTypes)
+				GenSchemas([]rust.UseType{*innerUsetType})
+			}
+
 			usetype2Schema[useType.String()] = GenSchemaByDefineType(_defineType, useType.ModPath)
 			// continue
 		}
@@ -222,15 +236,25 @@ func GenSchemas(useTypes []rust.UseType) map[string]*spec.Schema {
 
 func SaveSchemas(useTypes []rust.UseType, space string) {
 
-	logger.WithField("useTypes", useTypes).Debug("SaveSchemas")
+	logrus.WithField("useTypes", useTypes).Debug("SaveSchemas")
 
 	schemas := GenSchemas(useTypes)
-	j, _ := json.MarshalIndent(schemas, "", "  ")
-	logger.WithField("schemas", string(j)).Debug("Generated schemas")
+	// j, err := json.MarshalIndent(schemas, "", "  ")
+	// if err != nil {
+	// 	panic(errors.WithMessage(err, "failed to json marshal schemas"))
+	// }
 
 	for k, schema := range schemas {
-		j, _ := json.MarshalIndent(schema, "", "  ")
+		j, err := json.MarshalIndent(schema, "", "  ")
+		if err != nil {
+			logrus.WithField("name", k).WithField("schema", schema).WithError(err).Panic("failed to json marshal schema")
+			return
+			// panic(errors.WithMessage(err, "failed to json marshal schema"))
+		}
 		p := specconfig.GetSchemaSavePath(space, k)
+
+		// logrus.WithField("name", k).WithField("schema", string(j)).Debug("Generated schema")
+		logrus.WithField("name", k).Debug("Generated schema")
 
 		saveFile(p, j)
 	}
@@ -395,7 +419,7 @@ func findUseType(name string, useTypes []rust.UseType) *rust.UseType {
 func mustFindUseType(name string, useTypes []rust.UseType) *rust.UseType {
 	ut := findUseType(name, useTypes)
 	if ut == nil {
-		logger.WithFields(logrus.Fields{
+		logrus.WithFields(logrus.Fields{
 			"Name":      name,
 			"Use Types": useTypes,
 		}).Panic("not found use type")
@@ -496,6 +520,10 @@ func getEnumFieldUseTypes(aim rust.UseType, usePool []rust.Use, enumsPool map[st
 	return founds
 }
 
+// func getVecUseTypes(aim rust.UseType, usePool []rust.Use, enumsPool map[string]rust.Enum, structsPool map[string]rust.Struct, defineTypes map[string]rust.RustType) []rust.UseType {
+
+// }
+
 func findFieldUseType(aim rust.UseType, fCoreType string, usePool []rust.Use, enumsPool map[string]rust.Enum, structsPool map[string]rust.Struct, defineTypesPool map[string]rust.RustType) *rust.UseType {
 	for _, u := range usePool {
 		uItems := u.Parse()
@@ -511,13 +539,14 @@ func findFieldUseType(aim rust.UseType, fCoreType string, usePool []rust.Use, en
 	_, ok2 := structsPool[fCoreType]
 	_, ok3 := defineTypesPool[fCoreType]
 	if ok1 || ok2 || ok3 {
-		fUseType := aim
+		var fUseType rust.UseType
+		fUseType.ModPath = aim.ModPath
 		fUseType.Alias = fCoreType
 		fUseType.Name = fCoreType
 		return &fUseType
 	}
 
-	logger.WithFields(logrus.Fields{
+	logrus.WithFields(logrus.Fields{
 		"aim":             aim,
 		"field core type": fCoreType,
 		"use pool":        usePool,
@@ -540,6 +569,7 @@ func getCachedUseTypes() []rust.UseType {
 // 生成 rust.TypeParsed 的 ref schema；方法参数、返回值、结构体字段、枚举项都使用该类型
 // 从内生成ref，然后到外层层剥离，生成items，array 等描述
 func genObjRefSchema(_type rust.TypeParsed, defaultModPath []string) *spec.Schema {
+	logrus.WithField("type", _type).WithField("default mod path", defaultModPath).Debug("gen object ref schema")
 	s := spec.Schema{}
 
 	if _type.Core == nil {

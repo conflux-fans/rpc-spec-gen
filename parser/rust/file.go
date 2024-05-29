@@ -63,10 +63,13 @@ func (sc SourceCode) FindStruct(structName string) (Struct, []Use) {
 }
 
 func (sc SourceCode) GetUses() []Use {
+	// logrus.Info("Get Uses")
+
 	content := sc.cleand
 	reg := regexp.MustCompile(`(?mUs)use .*;`)
 	finds := reg.FindAllString(content, -1)
-	// fmt.Printf("useFinded %v\n", finds)
+
+	logrus.WithField("finds use len", len(finds)).Debug("found uses")
 
 	uses := []Use{}
 	for _, use := range finds {
@@ -128,6 +131,7 @@ func (sc SourceCode) GetDefineTypes() (map[string]RustType, []Use) {
 	defineTypes := make(map[string]RustType)
 	for m != nil {
 		name, define := getDefineType(m)
+		logrus.WithField("name", name).WithField("define", define).Debug("get define type")
 		defineTypes[name] = RustType(define)
 		m, e = re.FindNextMatch(m)
 		if e != nil {
@@ -174,9 +178,11 @@ func getStructName(m *regexp2.Match) string {
 	return name
 }
 
+// 返回类型名称和类型定义
+// 如 pub type AccessList = Vec<AccessListItem>; 返回 AccessList 和 Vec<AccessListItem>
 func getDefineType(m *regexp2.Match) (string, string) {
 	if len(m.Groups()) < 5 {
-		panic("can't get struct name")
+		panic("can't get type name")
 	}
 	name := m.Groups()[1].Capture.String()
 	if name != "" {
@@ -185,8 +191,8 @@ func getDefineType(m *regexp2.Match) (string, string) {
 	}
 	name = m.Groups()[3].Capture.String()
 	if name != "" {
-		define := m.Groups()[2].Capture.String()
+		define := m.Groups()[4].Capture.String()
 		return name, define
 	}
-	panic("can't get struct name and type define")
+	panic("can't get type name and type define")
 }

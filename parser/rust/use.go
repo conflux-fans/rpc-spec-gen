@@ -7,6 +7,7 @@ import (
 
 	"github.com/conflux-fans/rpc-spec-gen/utils"
 	"github.com/dlclark/regexp2"
+	"github.com/sirupsen/logrus"
 )
 
 type Use string
@@ -76,7 +77,7 @@ func (r *Use) body() useBody {
 	useFinded := useReg.FindStringSubmatch(string(*r))
 	// fmt.Printf("useFinded %v\n", useFinded)
 	if len(useFinded) == 0 {
-		logger.WithField("use", *r).Panic("not found use body")
+		logrus.WithField("use", *r).Panic("not found use body")
 	}
 	return useBody(useFinded[1])
 }
@@ -146,7 +147,7 @@ func (b *useBody) toNodes() []useNode {
 		}
 
 	}
-	logger.WithField("nodes", nodes).WithField("use", *b).Debug("use to nodes")
+	logrus.WithField("nodes", nodes).WithField("use", *b).Debug("use to nodes")
 	return nodes
 }
 

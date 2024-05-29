@@ -17,17 +17,27 @@ var config = struct {
 	TraitRootPath string
 }{
 	RustRootPath:  "/Users/dayong/myspace/mywork/conflux-rust/",
-	TraitRootPath: "client/src/rpc/traits/",
+	TraitRootPath: "crates/client/src/rpc/traits/",
 }
 
-var logger = &logrus.Logger{
-	Out:   os.Stdout,
-	Level: logrus.DebugLevel,
-	Formatter: &prefixed.TextFormatter{
+// var logger = &logrus.Logger{
+// 	Out:   os.Stdout,
+// 	Level: logrus.InfoLevel,
+// 	Formatter: &prefixed.TextFormatter{
+// 		TimestampFormat: "2006-01-02 15:04:05",
+// 		FullTimestamp:   true,
+// 		ForceFormatting: true,
+// 	},
+// }
+
+func init() {
+	logrus.SetFormatter(&prefixed.TextFormatter{
 		TimestampFormat: "2006-01-02 15:04:05",
 		FullTimestamp:   true,
 		ForceFormatting: true,
-	},
+	})
+	logrus.SetLevel(logrus.DebugLevel)
+	logrus.SetOutput(os.Stdout)
 }
 
 // V rpc 方法解析 参数 和 返回值
@@ -36,9 +46,10 @@ var logger = &logrus.Logger{
 // V 生成 open rpc 方法描述文件
 func main() {
 	// traitsFile := "/Users/wangdayong/myspace/mywork/conflux-rust/client/src/rpc/traits/cfx_space/cfx.rs"
-	traitsFile := "/Users/dayong/myspace/mywork/conflux-rust/client/src/rpc/traits/cfx_space/cfx.rs"
+	// traitsFile := "/Users/dayong/myspace/mywork/conflux-rust/crates/client/src/rpc/traits/cfx_space/cfx.rs"
 
-	// traitsFile = "/Users/wangdayong/myspace/mywork/conflux-rust/client/src/rpc/traits/eth_space/eth.rs"
+	// traitsFile := "/Users/wangdayong/myspace/mywork/conflux-rust/client/src/rpc/traits/eth_space/eth.rs"
+	traitsFile := "/Users/dayong/myspace/mywork/conflux-rust/crates/client/src/rpc/traits/eth_space/eth.rs"
 
 	space := path.Join(traitsFile, "..")[len(config.RustRootPath+config.TraitRootPath):]
 
@@ -48,8 +59,8 @@ func main() {
 	}
 	parsed := rust.TraitsFile(traits).Parse()
 
-	j, _ := json.MarshalIndent(rust.TraitsFile(traits).Parse(), "", " ")
-	logger.Info("traitsFile parsed result: ", string(j))
+	j, _ := json.MarshalIndent(parsed, "", " ")
+	logrus.Info("traitsFile parsed result: ", string(j))
 
 	for _, trait := range parsed.Traits {
 		openrpc.SaveSchemas(parsed.Uses, space)
