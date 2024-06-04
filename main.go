@@ -20,16 +20,6 @@ var config = struct {
 	TraitRootPath: "crates/client/src/rpc/traits/",
 }
 
-// var logger = &logrus.Logger{
-// 	Out:   os.Stdout,
-// 	Level: logrus.InfoLevel,
-// 	Formatter: &prefixed.TextFormatter{
-// 		TimestampFormat: "2006-01-02 15:04:05",
-// 		FullTimestamp:   true,
-// 		ForceFormatting: true,
-// 	},
-// }
-
 func init() {
 	logrus.SetFormatter(&prefixed.TextFormatter{
 		TimestampFormat: "2006-01-02 15:04:05",

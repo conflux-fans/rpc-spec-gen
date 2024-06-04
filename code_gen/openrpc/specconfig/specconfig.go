@@ -26,7 +26,8 @@ func init() {
 	}
 
 	for _, c := range cs {
-		specConfigs[c.Space] = &c
+		_c := c
+		specConfigs[c.Space] = &_c
 	}
 }
 
