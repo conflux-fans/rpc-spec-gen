@@ -35,10 +35,8 @@ func init() {
 // V 解析出字段类型
 // V 生成 open rpc 方法描述文件
 func main() {
-	// traitsFile := "/Users/wangdayong/myspace/mywork/conflux-rust/client/src/rpc/traits/cfx_space/cfx.rs"
 	// traitsFile := "/Users/dayong/myspace/mywork/conflux-rust/crates/client/src/rpc/traits/cfx_space/cfx.rs"
 
-	// traitsFile := "/Users/wangdayong/myspace/mywork/conflux-rust/client/src/rpc/traits/eth_space/eth.rs"
 	traitsFile := "/Users/dayong/myspace/mywork/conflux-rust/crates/client/src/rpc/traits/eth_space/eth.rs"
 
 	space := path.Join(traitsFile, "..")[len(config.RustRootPath+config.TraitRootPath):]

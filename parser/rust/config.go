@@ -32,6 +32,7 @@ func (r *RustUseTypeMeta) InFilePath() string {
 var FolderPathOfMod = map[string]string{
 	"crate::rpc::types":         "crates/client/src/rpc/types/",
 	"crate::rpc::types::pos":    "crates/client/src/rpc/types/pos/",
+	"crate::rpc::types::cfx":    "crates/client/src/rpc/types/cfx/",
 	"diem_types":                "crates/cfxcore/core/src/pos/types/src/",
 	"cfxcore::transaction_pool": "crates/cfxcore/core/src/transaction_pool/",
 	"primitives":                "crates/primitives/src/",
@@ -121,6 +122,12 @@ var RustUseTypeMetas map[string]RustUseTypeMeta = map[string]RustUseTypeMeta{
 
 	"primitives::AccessList":     {file: "crates/primitives/src/transaction/mod.rs"},
 	"primitives::AccessListItem": {file: "crates/primitives/src/transaction/mod.rs"},
+
+	// "crate::rpc::types::cfx::CfxAccessList": {file: "crates/client/src/rpc/types/cfx/access_list.rs"},
+	"crate::rpc::types::CallRequest":                            {file: "crates/client/src/rpc/types/cfx/call_request.rs"},
+	"crate::rpc::types::CheckBalanceAgainstTransactionResponse": {file: "crates/client/src/rpc/types/cfx/call_request.rs"},
+	"crate::rpc::types::EstimateGasAndCollateralResponse":       {file: "crates/client/src/rpc/types/cfx/call_request.rs"},
+	"crate::rpc::types::CfxFeeHistory":                          {file: "crates/client/src/rpc/types/cfx/fee_history.rs"},
 }
 
 func GetUseTypeMeta(useType UseType) (*RustUseTypeMeta, bool) {

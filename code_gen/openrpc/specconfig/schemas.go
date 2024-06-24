@@ -116,7 +116,7 @@ var BasetypeSchemas = map[string]*spec.Schema{
 	"RpcAddress": {
 		SchemaProps: spec.SchemaProps{
 			Type:    spec.StringOrArray{"string"},
-			Pattern: `^(NET\d+|CFX|CFXTEST)(:TYPE\..*|):[ABCDEFGHJKMNPRSTUVWXYZ0123456789]42)$`,
+			Pattern: `^(NET\d+|CFX|CFXTEST)(:TYPE\..*|):[ABCDEFGHJKMNPRSTUVWXYZ0123456789]{42}$`,
 		},
 	},
 	"Bytes": {
